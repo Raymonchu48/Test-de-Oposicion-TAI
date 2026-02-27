@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OpoStudy</title>
+  <link rel="manifest" href="./manifest.json" />
+  <meta name="theme-color" content="#4361ee" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__inner">
+      <div class="brand">
+        <span class="brand__logo" aria-hidden="true"></span>
+        <div>
+          <div class="brand__name">OpoStudy</div>
+          <div class="brand__sub">Preparación TAI · Tests inteligentes</div>
+        </div>
+      </div>
+      <button class="btn btn--ghost" id="btnInstall" hidden>Instalar</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card">
+      <h2 class="card__title">Configurar test</h2>
+
+      <div class="field">
+        <label class="label">Modo</label>
+        <div class="segmented" id="modeSegment">
+          <button class="segmented__btn is-active" data-mode="exam">Examen</button>
+          <button class="segmented__btn" data-mode="full">Completo</button>
+          <button class="segmented__btn" data-mode="practice">Práctica</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Bloque</label>
+        <select class="select" id="blockSelect">
+          <option value="" selected>Selecciona un bloque</option>
+          <option value="1">Bloque 1 · Organización del Estado</option>
+          <option value="2">Bloque 2 · Tecnología básica</option>
+          <option value="3">Bloque 3 · Desarrollo</option>
+          <option value="4">Bloque 4 · Sistemas y comunicaciones</option>
+        </select>
+        <div class="hint" id="blockHint">En modo “Completo” no hace falta elegir bloque.</div>
+      </div>
+
+      <div class="grid2">
+        <div class="field">
+          <label class="label">Preguntas</label>
+          <select class="select" id="countSelect">
+            <option value="10">10</option>
+            <option value="15" selected>15</option>
+            <option value="30">30</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label class="label">Temporizador</label>
+          <label class="switch">
+            <input type="checkbox" id="timerToggle" checked />
+            <span class="switch__ui"></span>
+            <span class="switch__text">Activado</span>
+          </label>
+        </div>
+      </div>
+
+      <button class="btn btn--primary" id="startBtn" disabled>Empezar</button>
+      <div class="hint">El sistema mezcla preguntas, evita repetidas y guarda tu progreso.</div>
+    </section>
+
+    <aside class="stack">
+      <section class="card">
+        <h2 class="card__title">Progreso</h2>
+        <div class="kpi-grid">
+          <div class="kpi"><div class="kpi__num" id="kpiAnswered">0</div><div class="kpi__label">Respondidas</div></div>
+          <div class="kpi"><div class="kpi__num" id="kpiAccuracy">0%</div><div class="kpi__label">Acierto</div></div>
+          <div class="kpi"><div class="kpi__num" id="kpiStreak">0</div><div class="kpi__label">Racha</div></div>
+          <div class="kpi"><div class="kpi__num" id="kpiMistakes">0</div><div class="kpi__label">Fallos guardados</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card__title">Plan de estudio</h2>
+        <div class="plan">
+          <div class="plan__row"><span>Objetivo diario</span><strong>15 preguntas</strong></div>
+          <div class="plan__row"><span>Revisión</span><strong>Errores de los últimos 7 días</strong></div>
+          <div class="plan__row"><span>Modo</span><strong>Examen con corrección</strong></div>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./config.js"></script>
+<script src="./app.js"></script>
+</body>
+</html>
