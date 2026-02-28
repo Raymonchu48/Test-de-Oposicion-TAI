@@ -1,5 +1,7 @@
 // app.js (Supabase + UI + modal test)
-
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+}
 const sb = supabase.createClient(
   window.OPOSTUDY_CONFIG.SUPABASE_URL,
   window.OPOSTUDY_CONFIG.SUPABASE_ANON_KEY
@@ -733,6 +735,7 @@ function savePracticalProgress(id, answer){
   store[id] = { answer, updated_at: new Date().toISOString() };
   localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
 }
+
 
 
 
