@@ -460,6 +460,36 @@ body{
   border: 1px solid rgba(4,53,73,.14);
   background: #fff;
 }
+/* Fondo base limpio */
+body{
+  background: #ffffff;
+  position: relative;
+}
+
+/* Banda superior (amarillo/turquesa) limitada en altura */
+:root{
+  --topband-h: 380px; /* ajusta: súbelo/bájalo según dónde quieras cortar */
+}
+
+.layout{
+  position: relative;
+}
+
+.layout::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  transform: translateX(-50%);
+  top:-18px;
+  width:100vw;
+  height: var(--topband-h);
+  z-index:-1;
+
+  background:
+    radial-gradient(900px 520px at 18% -10%, rgba(247,181,17,.38), transparent 60%),
+    radial-gradient(900px 520px at 90% 0%, rgba(4,151,167,.18), transparent 62%),
+    linear-gradient(180deg, #fff6dc 0%, #ffffff 70%);
+}
 
 
 
