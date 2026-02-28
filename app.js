@@ -25,6 +25,7 @@ const kpiMistakes = document.getElementById("kpiMistakes");
 
 const state = {
   mode: "exam", // exam | full | practice
+  practiceKind: "practical", // practical | test   ✅ aquí
   block: null,
   count: 15,
   timerEnabled: true,
@@ -613,4 +614,5 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
 
