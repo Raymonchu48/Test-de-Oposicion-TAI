@@ -169,10 +169,43 @@ function syncStartEnabled() {
 
 async function startTest() {
   try {
-    if (state.mode !== "full" && !state.block) {
-      alert("Selecciona un bloque antes de empezar.");
+    // Si es Práctica y el usuario eligió Trabajo práctico, salimos por ese flujo
+    if (state.mode === "practice" && state.practiceKind === "practical") {
+      await startPractical();
       return;
     }
+
+    let data = [];
+
+    if (state.mode === "mistakes") {
+      data = await fetchMistakeQuestions();
+    } else {
+      data = await fetchQuestions({
+        mode: state.mode,
+        block: state.block,
+        count: state.count,
+      });
+    }
+
+    if (!data.length) {
+      alert("No hay preguntas disponibles para esa selección.");
+      return;
+    }
+
+    state.questions = data;
+    state.index = 0;
+    state.selected = null;
+    state.answers = [];
+    state.timeElapsed = 0;
+
+    openModal();
+    renderQuestion();
+    startTimerIfNeeded();
+  } catch (e) {
+    console.error(e);
+    alert("Error: " + (e?.message || JSON.stringify(e)));
+  }
+}
 async function startPractical() {
   if (!state.block) {
     alert("Selecciona un bloque para ver el trabajo práctico.");
@@ -735,6 +768,7 @@ function savePracticalProgress(id, answer){
   store[id] = { answer, updated_at: new Date().toISOString() };
   localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
 }
+
 
 
 
