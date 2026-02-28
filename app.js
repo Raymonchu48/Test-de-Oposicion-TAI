@@ -171,7 +171,27 @@ async function startTest() {
       alert("Selecciona un bloque antes de empezar.");
       return;
     }
+async function startPractical() {
+  if (!state.block) {
+    alert("Selecciona un bloque para ver el trabajo práctico.");
+    return;
+  }
 
+  // Trae 1 práctico aleatorio del bloque
+  const { data, error } = await sb.rpc("get_random_practicals", {
+    p_count: 1,
+    p_block: Number(state.block)
+  });
+
+  if (error) throw error;
+  if (!data || !data.length) {
+    alert("No hay prácticos cargados para ese bloque todavía.");
+    return;
+  }
+
+  openModal();
+  renderPractical(data[0]);
+}
    let data = [];
 
 if (state.mode === "mistakes") {
@@ -643,7 +663,76 @@ function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
 
+function renderPractical(p) {
+  // Usa el mismo modal, pero mostramos una vista de “práctico”
+  const bodyEl = modalEl.querySelector("#quizBody");
+  const resultsEl = modalEl.querySelector("#quizResults");
+  resultsEl.style.display = "none";
+  bodyEl.style.display = "block";
 
+  modalEl.querySelector("#quizSub").textContent =
+    `Trabajo práctico · Bloque ${p.block} · Tema ${p.topic} · Tipo: ${p.type}`;
+
+  const qEl = modalEl.querySelector("#quizQuestion");
+  qEl.textContent = p.title;
+
+  const optsEl = modalEl.querySelector("#quizOptions");
+  optsEl.innerHTML = `
+    <div class="practical">
+      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt).replaceAll("\n","<br>")}</div>
+      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n","<br>")}</div>
+
+      <label class="label" style="margin-top:14px;">Tu respuesta</label>
+      <textarea id="practicalAnswer" class="textarea" rows="8" placeholder="Escribe aquí tu solución..."></textarea>
+
+      <div class="practical__actions">
+        <button class="btn btn--ghost" id="savePractical">Guardar</button>
+        <button class="btn btn--primary" id="showSolution">Ver solución</button>
+      </div>
+
+      <div id="solutionBox" class="practical__solution" style="display:none;"></div>
+    </div>
+  `;
+
+  // Desactivar navegación de test
+  modalEl.querySelector("#quizPrev").style.display = "none";
+  modalEl.querySelector("#quizNext").style.display = "none";
+  modalEl.querySelector("#quizBarFill").style.width = "0%";
+
+  // Acciones
+  optsEl.querySelector("#savePractical").onclick = () => {
+    const txt = optsEl.querySelector("#practicalAnswer").value || "";
+    savePracticalProgress(p.id, txt);
+    alert("Guardado.");
+  };
+
+  optsEl.querySelector("#showSolution").onclick = () => {
+    const box = optsEl.querySelector("#solutionBox");
+    box.style.display = "block";
+    box.innerHTML = `<strong>Solución / guía</strong><br>${escapeHtml(p.solution || "Sin solución todavía.").replaceAll("\n","<br>")}`;
+  };
+}
+
+function escapeHtml(s){
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+const PRACTICALS_STORE = "opostudy_practicals_progress_v1";
+
+function loadPracticalProgress(){
+  try { return JSON.parse(localStorage.getItem(PRACTICALS_STORE) || "{}"); }
+  catch { return {}; }
+}
+
+function savePracticalProgress(id, answer){
+  const store = loadPracticalProgress();
+  store[id] = { answer, updated_at: new Date().toISOString() };
+  localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
+}
 
 
 
