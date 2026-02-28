@@ -84,6 +84,21 @@ function init() {
   setMode("exam", { silent: true });
 }
 
+  // ✅ Listener del submodo de práctica
+  if (practiceKindSegment) {
+    practiceKindSegment.addEventListener("click", (e) => {
+      const btn = e.target.closest('button[data-kind]');
+      if (!btn) return;
+
+      state.practiceKind = btn.dataset.kind;
+
+      practiceKindSegment.querySelectorAll(".segmented__btn").forEach(b => {
+        b.classList.toggle("is-active", b.dataset.kind === state.practiceKind);
+      });
+    });
+  }
+
+  
 function setMode(mode, opts = {}) {
   state.mode = mode;
 
@@ -616,6 +631,7 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
 
 
 
