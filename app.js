@@ -1,6 +1,6 @@
 // app.js (Supabase + UI + modal test)
 
-const supabase = window.supabase.createClient(
+const sb = supabase.createClient(
   window.OPOSTUDY_CONFIG.SUPABASE_URL,
   window.OPOSTUDY_CONFIG.SUPABASE_ANON_KEY
 );
@@ -158,7 +158,7 @@ async function fetchQuestions({ mode, block, count }) {
     p_topic: null,
   };
 
-  const { data, error } = await supabase.rpc("get_random_questions", params);
+  const { data, error } = await sb.rpc("get_random_questions", params);
   if (error) throw error;
 
   return (data || []).map((q) => ({
@@ -479,4 +479,5 @@ function renderKpis() {
   kpiAccuracy.textContent = `${acc}%`;
   kpiStreak.textContent = String(state.stats.streakDays);
   kpiMistakes.textContent = String(state.stats.mistakes);
+
 }
