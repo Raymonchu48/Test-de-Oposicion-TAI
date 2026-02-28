@@ -367,6 +367,35 @@ body{
   background: linear-gradient(135deg, #0497a7, #057f8c);
   box-shadow: 0 14px 28px rgba(4,151,167,.22);
 }
+/* Start button visible también en tema claro (override) */
+#startBtn{
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 54px;
+  padding: 18px 18px;
+  margin-top: 12px;
+
+  border: 0;
+  border-radius: 14px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: .2px;
+
+  background: linear-gradient(135deg, #0497a7, #057f8c);
+  color: #fff;
+  box-shadow: 0 14px 28px rgba(4,151,167,.22);
+}
+
+/* Si está disabled, que NO se “evapore” */
+#startBtn:disabled{
+  opacity: 1;                 /* clave */
+  cursor: not-allowed;
+  background: linear-gradient(135deg, rgba(4,151,167,.45), rgba(5,127,140,.45));
+  box-shadow: none;
+  color: rgba(255,255,255,.95);
+}
 
 
 
