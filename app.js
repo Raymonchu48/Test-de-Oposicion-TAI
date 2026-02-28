@@ -1,15 +1,18 @@
-// app.js (Supabase + UI + modal test)
-if (window.mermaid) {
-  mermaid.initialize({ startOnLoad: false, theme: "neutral" });
-}
+// app.js (Supabase + UI + modal test + mistakes + practicals + mermaid)
+
 const sb = supabase.createClient(
   window.OPOSTUDY_CONFIG.SUPABASE_URL,
   window.OPOSTUDY_CONFIG.SUPABASE_ANON_KEY
 );
 
+if (window.mermaid) {
+  window.mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+}
+
 const STORAGE_KEY = "opostudy_stats_v1";
 const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
-const MISTAKES_LOOKBACK_DAYS = 30; // repaso por defecto: últimos 30 días
+const PRACTICALS_STORE = "opostudy_practicals_progress_v1";
+const MISTAKES_LOOKBACK_DAYS = 30;
 
 // UI refs
 const modeSegment = document.getElementById("modeSegment");
@@ -28,8 +31,8 @@ const kpiStreak = document.getElementById("kpiStreak");
 const kpiMistakes = document.getElementById("kpiMistakes");
 
 const state = {
-  mode: "exam", // exam | full | practice
-  practiceKind: "practical", // practical | test   ✅ aquí
+  mode: "exam", // exam | full | practice | mistakes
+  practiceKind: "practical", // practical | test
   block: null,
   count: 15,
   timerEnabled: true,
@@ -45,103 +48,91 @@ const state = {
   stats: loadStats(),
 };
 
+let modalEl = null;
+
 init();
 renderKpis();
 
+/* ---------------------------
+   Init / Mode
+---------------------------- */
+
 function init() {
-  // Defaults from UI
   state.count = Number(countSelect.value);
   state.timerEnabled = !!timerToggle.checked;
 
-  // Mode buttons
   modeSegment.addEventListener("click", (e) => {
     const btn = e.target.closest("button[data-mode]");
     if (!btn) return;
     setMode(btn.dataset.mode);
   });
 
-  // ✅ Submodo de práctica (solo si existe el bloque en el HTML)
   if (practiceKindSegment) {
     practiceKindSegment.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-kind]");
       if (!btn) return;
 
       state.practiceKind = btn.dataset.kind;
-
       practiceKindSegment.querySelectorAll(".segmented__btn").forEach((b) => {
         b.classList.toggle("is-active", b.dataset.kind === state.practiceKind);
       });
+
+      syncStartEnabled();
     });
   }
 
-  // Block
   blockSelect.addEventListener("change", () => {
     state.block = blockSelect.value ? Number(blockSelect.value) : null;
     syncStartEnabled();
   });
 
-  // Count
   countSelect.addEventListener("change", () => {
     state.count = Number(countSelect.value);
   });
 
-  // Timer
   timerToggle.addEventListener("change", () => {
     state.timerEnabled = !!timerToggle.checked;
   });
 
-  // Start
-  startBtn.addEventListener("click", () => startTest());
+  startBtn.addEventListener("click", () => startFlow());
 
-  // Start enabled/disabled
   syncStartEnabled();
-
-  // Default mode visual
   setMode("exam", { silent: true });
 }
 
-  function setMode(mode, opts = {}) {
+function setMode(mode, opts = {}) {
   state.mode = mode;
 
-  // UI active state (solo botones de modo)
-  document.querySelectorAll('#modeSegment .segmented__btn').forEach((b) => {
+  // Solo botones de modo (no tocar los del submodo práctica)
+  document.querySelectorAll("#modeSegment .segmented__btn").forEach((b) => {
     b.classList.toggle("is-active", b.dataset.mode === mode);
   });
 
-  // Mostrar/ocultar submodo de práctica
   if (practiceKindWrap) {
-    practiceKindWrap.style.display = (mode === "practice") ? "block" : "none";
+    practiceKindWrap.style.display = mode === "practice" ? "block" : "none";
   }
 
-  // Reset hint por defecto
   blockHint.textContent = "En modo “Completo” no hace falta elegir bloque.";
 
-  // UX rules por modo
   if (mode === "full") {
-    // Completo: bloque no aplica
     blockSelect.value = "";
     state.block = null;
     blockSelect.disabled = true;
     blockHint.style.display = "block";
   } else if (mode === "mistakes") {
-    // Repaso fallos: bloque opcional como filtro
-    blockSelect.disabled = false;
+    blockSelect.disabled = false; // filtro opcional
     blockHint.style.display = "block";
     blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
   } else {
-    // exam / practice: bloque requerido
     blockSelect.disabled = false;
     blockHint.style.display = "none";
   }
 
-  // Count suggestion
   if (!opts.silent) {
     if (mode === "full" && Number(countSelect.value) < 30) {
       countSelect.value = "30";
       state.count = 30;
     }
-
-    // En práctica test seguimos con 15 por defecto; en prácticos no importa tanto, lo dejamos
     if ((mode === "exam" || mode === "practice") && Number(countSelect.value) > 15) {
       countSelect.value = "15";
       state.count = 15;
@@ -157,9 +148,11 @@ function syncStartEnabled() {
   if (state.mode === "full") {
     ok = true;
   } else if (state.mode === "mistakes") {
-    // si hay bloque seleccionado, filtra; si no, todos
     const blockFilter = state.block ? Number(state.block) : null;
     ok = getPendingMistakesCount(blockFilter) > 0;
+  } else if (state.mode === "practice") {
+    // En práctica: bloque obligatorio (tanto test como práctico)
+    ok = !!state.block;
   } else {
     ok = !!state.block;
   }
@@ -167,38 +160,43 @@ function syncStartEnabled() {
   startBtn.disabled = !ok;
 }
 
-async function startTest() {
+/* ---------------------------
+   Main flow
+---------------------------- */
+
+async function startFlow() {
   try {
-    // Si es Práctica y el usuario eligió Trabajo práctico, salimos por ese flujo
+    // Práctica → Trabajo práctico
     if (state.mode === "practice" && state.practiceKind === "practical") {
       await startPractical();
       return;
     }
 
-    let data = [];
-
+    // Test normal (exam/full/practice-test/mistakes)
+    let questions = [];
     if (state.mode === "mistakes") {
-      data = await fetchMistakeQuestions();
+      questions = await fetchMistakeQuestions();
     } else {
-      data = await fetchQuestions({
+      questions = await fetchQuestions({
         mode: state.mode,
         block: state.block,
         count: state.count,
       });
     }
 
-    if (!data.length) {
+    if (!questions.length) {
       alert("No hay preguntas disponibles para esa selección.");
       return;
     }
 
-    state.questions = data;
+    state.questions = questions;
     state.index = 0;
     state.selected = null;
     state.answers = [];
     state.timeElapsed = 0;
 
     openModal();
+    setQuizNavVisible(true);
     renderQuestion();
     startTimerIfNeeded();
   } catch (e) {
@@ -206,78 +204,46 @@ async function startTest() {
     alert("Error: " + (e?.message || JSON.stringify(e)));
   }
 }
-async function startPractical() {
-  if (!state.block) {
-    alert("Selecciona un bloque para ver el trabajo práctico.");
-    return;
-  }
 
-  // Trae 1 práctico aleatorio del bloque
-  const { data, error } = await sb.rpc("get_random_practicals", {
-    p_count: 1,
-    p_block: Number(state.block)
-  });
+/* ---------------------------
+   Supabase fetch
+---------------------------- */
 
+async function fetchQuestions({ mode, block, count }) {
+  const params = {
+    p_count: Number(count),
+    p_block: mode === "full" ? null : Number(block),
+    p_topic: null,
+  };
+
+  const { data, error } = await sb.rpc("get_random_questions", params);
   if (error) throw error;
-  if (!data || !data.length) {
-    alert("No hay prácticos cargados para ese bloque todavía.");
-    return;
-  }
 
-  openModal();
-  renderPractical(data[0]);
-}
-   let data = [];
-
-if (state.mode === "mistakes") {
-  data = await fetchMistakeQuestions();
-} else {
-  data = await fetchQuestions({
-    mode: state.mode,
-    block: state.block,
-    count: state.count,
-  });
+  return (data || []).map((q) => ({
+    id: q.id,
+    block: q.block,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    statement: q.statement,
+    options: normalizeOptions(q.options),
+    correctIndex: q.correct_index,
+    explanation: q.explanation || "",
+    reference: q.reference || "",
+  }));
 }
 
-    if (!data.length) {
-      alert("No hay preguntas disponibles para esa selección.");
-      return;
-    }
-
-    state.questions = data;
-    state.index = 0;
-    state.selected = null;
-    state.answers = [];
-    state.timeElapsed = 0;
-
-    openModal();
-    renderQuestion();
-    startTimerIfNeeded();
-  } catch (e) {
-    console.error(e);
-    alert("Error cargando preguntas: " + (e?.message || JSON.stringify(e)));
-  }
-}
 async function fetchMistakeQuestions() {
   const blockFilter = state.block ? Number(state.block) : null;
   const ids = getPendingMistakeIds({ block: blockFilter });
-
   if (!ids.length) return [];
 
-  // Limitar a lo pedido (barajar luego)
   const take = Math.min(Number(state.count), ids.length);
   const chosenIds = shuffleArray(ids).slice(0, take);
 
-  const { data, error } = await sb
-    .from("questions")
-    .select("*")
-    .in("id", chosenIds);
-
+  const { data, error } = await sb.from("questions").select("*").in("id", chosenIds);
   if (error) throw error;
 
-  // Barajar para orden aleatorio
   const shuffled = shuffleArray(data || []);
-
   return shuffled.map((q) => ({
     id: q.id,
     block: q.block,
@@ -291,20 +257,6 @@ async function fetchMistakeQuestions() {
   }));
 }
 
-function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-async function fetchQuestions({ mode, block, count }) {
-  const params = {
-    p_count: Number(count),
-    p_block: mode === "full" ? null : Number(block),
-    p_topic: null,
-  };
 async function startPractical() {
   if (!state.block) {
     alert("Selecciona un bloque para ver el trabajo práctico.");
@@ -323,22 +275,10 @@ async function startPractical() {
   }
 
   openModal();
-  renderPractical(data[0]);
-}
-  const { data, error } = await sb.rpc("get_random_questions", params);
-  if (error) throw error;
+  setQuizNavVisible(false);
+  stopTimer();
 
-  return (data || []).map((q) => ({
-    id: q.id,
-    block: q.block,
-    topic: q.topic,
-    difficulty: q.difficulty,
-    statement: q.statement,
-    options: normalizeOptions(q.options),
-    correctIndex: q.correct_index,
-    explanation: q.explanation || "",
-    reference: q.reference || "",
-  }));
+  renderPractical(data[0]);
 }
 
 function normalizeOptions(opts) {
@@ -349,11 +289,27 @@ function normalizeOptions(opts) {
   return [];
 }
 
-/* ---------------------------
-   Modal UI (test)
----------------------------- */
+function normalizeAssets(a) {
+  if (!a) return {};
+  if (typeof a === "object") return a;
+  if (typeof a === "string") {
+    try { return JSON.parse(a); } catch { return {}; }
+  }
+  return {};
+}
 
-let modalEl = null;
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ---------------------------
+   Modal
+---------------------------- */
 
 function ensureModal() {
   if (modalEl) return modalEl;
@@ -362,11 +318,11 @@ function ensureModal() {
   modalEl.className = "modal";
   modalEl.innerHTML = `
     <div class="modal__backdrop" data-close="1"></div>
-    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Test OpoStudy">
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="OpoStudy">
       <div class="quiz">
         <div class="quiz__top">
           <div class="quiz__meta">
-            <div class="quiz__title">Test</div>
+            <div class="quiz__title">OpoStudy</div>
             <div class="quiz__sub" id="quizSub">Cargando...</div>
           </div>
           <div class="quiz__right">
@@ -385,7 +341,7 @@ function ensureModal() {
           <div class="quiz__explain" id="quizExplain" style="display:none;"></div>
         </div>
 
-        <div class="quiz__footer">
+        <div class="quiz__footer" id="quizFooter">
           <button class="btn btn--ghost" id="quizPrev" type="button">Anterior</button>
           <button class="btn btn--primary" id="quizNext" type="button" disabled>Siguiente</button>
         </div>
@@ -397,13 +353,10 @@ function ensureModal() {
 
   document.body.appendChild(modalEl);
 
-  // close handlers
   modalEl.addEventListener("click", (e) => {
     if (e.target?.dataset?.close) closeModal();
   });
   modalEl.querySelector("#quizCloseBtn").addEventListener("click", () => closeModal());
-
-  // nav handlers
   modalEl.querySelector("#quizPrev").addEventListener("click", () => goPrev());
   modalEl.querySelector("#quizNext").addEventListener("click", () => goNext());
 
@@ -423,10 +376,19 @@ function closeModal() {
   document.body.classList.remove("no-scroll");
 }
 
+function setQuizNavVisible(visible) {
+  const footer = modalEl.querySelector("#quizFooter");
+  footer.style.display = visible ? "flex" : "none";
+  modalEl.querySelector("#quizTimer").style.display = visible ? "block" : "none";
+}
+
+/* ---------------------------
+   Test render
+---------------------------- */
+
 function renderQuestion() {
   const q = state.questions[state.index];
 
-  // reset view
   const resultsEl = modalEl.querySelector("#quizResults");
   resultsEl.style.display = "none";
   const bodyEl = modalEl.querySelector("#quizBody");
@@ -453,19 +415,15 @@ function renderQuestion() {
       <span class="opt__text"></span>
     `;
     btn.querySelector(".opt__text").textContent = text;
-
     btn.addEventListener("click", () => selectOption(i));
     optsEl.appendChild(btn);
   });
 
-  // progress
   const pct = (state.index / state.questions.length) * 100;
   modalEl.querySelector("#quizBarFill").style.width = `${pct}%`;
 
-  // prev button
   modalEl.querySelector("#quizPrev").disabled = state.index === 0;
 
-  // explanation (practice only)
   const ex = modalEl.querySelector("#quizExplain");
   ex.style.display = "none";
   ex.textContent = "";
@@ -475,14 +433,12 @@ function selectOption(i) {
   const q = state.questions[state.index];
   state.selected = i;
 
-  // highlight selected
   modalEl.querySelectorAll(".opt").forEach((b) => {
     b.classList.toggle("is-selected", Number(b.dataset.index) === i);
     b.classList.remove("is-correct", "is-wrong");
   });
 
   if (state.mode === "practice") {
-    // show correction immediately
     modalEl.querySelectorAll(".opt").forEach((b) => {
       const idx = Number(b.dataset.index);
       if (idx === q.correctIndex) b.classList.add("is-correct");
@@ -508,12 +464,10 @@ function goNext() {
 
   const q = state.questions[state.index];
   const isCorrect = state.selected === q.correctIndex;
-  if (!isCorrect) {
-  upsertMistake(q.id, q.block, q.topic);
-} else if (state.mode === "mistakes") {
-  // Si lo aciertas en repaso, lo quitamos de "pendientes"
-  resolveMistake(q.id);
-}
+
+  // mistakes logic
+  if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
+  else if (state.mode === "mistakes") resolveMistake(q.id);
 
   state.answers.push({
     id: q.id,
@@ -524,16 +478,12 @@ function goNext() {
     isCorrect,
   });
 
-  // stats
   updateStatsOnAnswer(isCorrect);
 
   state.index++;
 
-  if (state.index >= state.questions.length) {
-    finishTest();
-  } else {
-    renderQuestion();
-  }
+  if (state.index >= state.questions.length) finishTest();
+  else renderQuestion();
 }
 
 function finishTest() {
@@ -543,7 +493,6 @@ function finishTest() {
   const total = state.answers.length;
   const pct = total ? Math.round((correct / total) * 100) : 0;
 
-  // results view
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "none";
 
@@ -566,10 +515,103 @@ function finishTest() {
 
   modalEl.querySelector("#quizBarFill").style.width = "100%";
   resultsEl.querySelector("#resClose").addEventListener("click", () => closeModal());
-  resultsEl.querySelector("#resAgain").addEventListener("click", () => startTest());
+  resultsEl.querySelector("#resAgain").addEventListener("click", () => startFlow());
 
   renderKpis();
 }
+
+/* ---------------------------
+   Practical render
+---------------------------- */
+
+function renderPractical(p) {
+  const assets = normalizeAssets(p.assets);
+
+  const resultsEl = modalEl.querySelector("#quizResults");
+  resultsEl.style.display = "none";
+  const bodyEl = modalEl.querySelector("#quizBody");
+  bodyEl.style.display = "block";
+
+  modalEl.querySelector("#quizSub").textContent =
+    `Trabajo práctico · Bloque ${p.block} · Tema ${p.topic} · Tipo: ${p.type}`;
+
+  modalEl.querySelector("#quizQuestion").textContent = p.title;
+
+  const optsEl = modalEl.querySelector("#quizOptions");
+
+  const diagramHtml = assets.mermaid
+    ? `<div class="practical__prompt"><strong>Diagrama</strong><pre class="mermaid" id="mmd">${escapeHtml(assets.mermaid)}</pre></div>`
+    : "";
+
+  optsEl.innerHTML = `
+    <div class="practical">
+      ${diagramHtml}
+      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt).replaceAll("\n","<br>")}</div>
+      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n","<br>")}</div>
+
+      <label class="label" style="margin-top:14px;">Tu respuesta</label>
+      <textarea id="practicalAnswer" class="textarea" rows="8" placeholder="Escribe aquí tu solución..."></textarea>
+
+      <div class="practical__actions">
+        <button class="btn btn--ghost" id="savePractical" type="button">Guardar</button>
+        <button class="btn btn--primary" id="showSolution" type="button">Ver solución</button>
+      </div>
+
+      <div id="solutionBox" class="practical__solution" style="display:none;"></div>
+    </div>
+  `;
+
+  // Load saved answer
+  const store = loadPracticalProgress();
+  if (store[p.id]?.answer) {
+    optsEl.querySelector("#practicalAnswer").value = store[p.id].answer;
+  }
+
+  // Actions
+  optsEl.querySelector("#savePractical").onclick = () => {
+    const txt = optsEl.querySelector("#practicalAnswer").value || "";
+    savePracticalProgress(p.id, txt);
+    alert("Guardado.");
+  };
+
+  optsEl.querySelector("#showSolution").onclick = () => {
+    const box = optsEl.querySelector("#solutionBox");
+    box.style.display = "block";
+    box.innerHTML = `<strong>Solución / guía</strong><br>${escapeHtml(p.solution || "Sin solución todavía.").replaceAll("\n","<br>")}`;
+  };
+
+  // Mermaid render (si existe)
+  if (assets.mermaid && window.mermaid) {
+    const node = optsEl.querySelector("#mmd");
+    if (node) {
+      window.mermaid.run({ nodes: [node] });
+    }
+  }
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function loadPracticalProgress() {
+  try { return JSON.parse(localStorage.getItem(PRACTICALS_STORE) || "{}"); }
+  catch { return {}; }
+}
+
+function savePracticalProgress(id, answer) {
+  const store = loadPracticalProgress();
+  store[id] = { answer, updated_at: new Date().toISOString() };
+  localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
+}
+
+/* ---------------------------
+   Timer
+---------------------------- */
 
 function startTimerIfNeeded() {
   stopTimer();
@@ -597,25 +639,10 @@ function stopTimer() {
 function loadStats() {
   const raw = localStorage.getItem(STORAGE_KEY);
   if (!raw) {
-    return {
-      totalAnswered: 0,
-      totalCorrect: 0,
-      mistakes: 0,
-      streakDays: 0,
-      lastStudyDate: null, // YYYY-MM-DD
-    };
+    return { totalAnswered: 0, totalCorrect: 0, mistakes: 0, streakDays: 0, lastStudyDate: null };
   }
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return {
-      totalAnswered: 0,
-      totalCorrect: 0,
-      mistakes: 0,
-      streakDays: 0,
-      lastStudyDate: null,
-    };
-  }
+  try { return JSON.parse(raw); }
+  catch { return { totalAnswered: 0, totalCorrect: 0, mistakes: 0, streakDays: 0, lastStudyDate: null }; }
 }
 
 function saveStats() {
@@ -627,17 +654,14 @@ function updateStatsOnAnswer(isCorrect) {
   if (isCorrect) state.stats.totalCorrect++;
   if (!isCorrect) state.stats.mistakes++;
 
-  // streak logic (simple)
   const today = new Date();
   const ymd = today.toISOString().slice(0, 10);
 
-  if (!state.stats.lastStudyDate) {
-    state.stats.streakDays = 1;
-  } else if (state.stats.lastStudyDate !== ymd) {
+  if (!state.stats.lastStudyDate) state.stats.streakDays = 1;
+  else if (state.stats.lastStudyDate !== ymd) {
     const last = new Date(state.stats.lastStudyDate + "T00:00:00Z");
     const diffDays = Math.floor((today - last) / (1000 * 60 * 60 * 24));
-    if (diffDays === 1) state.stats.streakDays += 1;
-    else state.stats.streakDays = 1;
+    state.stats.streakDays = diffDays === 1 ? state.stats.streakDays + 1 : 1;
   }
 
   state.stats.lastStudyDate = ymd;
@@ -652,8 +676,12 @@ function renderKpis() {
   kpiAccuracy.textContent = `${acc}%`;
   kpiStreak.textContent = String(state.stats.streakDays);
   kpiMistakes.textContent = String(getPendingMistakesCount(null));
-
 }
+
+/* ---------------------------
+   Mistakes store
+---------------------------- */
+
 function loadMistakes() {
   const raw = localStorage.getItem(STORAGE_MISTAKES_KEY);
   if (!raw) return [];
@@ -716,81 +744,3 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
-
-function renderPractical(p) {
-  // Usa el mismo modal, pero mostramos una vista de “práctico”
-  const bodyEl = modalEl.querySelector("#quizBody");
-  const resultsEl = modalEl.querySelector("#quizResults");
-  resultsEl.style.display = "none";
-  bodyEl.style.display = "block";
-
-  modalEl.querySelector("#quizSub").textContent =
-    `Trabajo práctico · Bloque ${p.block} · Tema ${p.topic} · Tipo: ${p.type}`;
-
-  const qEl = modalEl.querySelector("#quizQuestion");
-  qEl.textContent = p.title;
-
-  const optsEl = modalEl.querySelector("#quizOptions");
-  optsEl.innerHTML = `
-    <div class="practical">
-      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt).replaceAll("\n","<br>")}</div>
-      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n","<br>")}</div>
-
-      <label class="label" style="margin-top:14px;">Tu respuesta</label>
-      <textarea id="practicalAnswer" class="textarea" rows="8" placeholder="Escribe aquí tu solución..."></textarea>
-
-      <div class="practical__actions">
-        <button class="btn btn--ghost" id="savePractical">Guardar</button>
-        <button class="btn btn--primary" id="showSolution">Ver solución</button>
-      </div>
-
-      <div id="solutionBox" class="practical__solution" style="display:none;"></div>
-    </div>
-  `;
-
-  // Desactivar navegación de test
-  modalEl.querySelector("#quizPrev").style.display = "none";
-  modalEl.querySelector("#quizNext").style.display = "none";
-  modalEl.querySelector("#quizBarFill").style.width = "0%";
-
-  // Acciones
-  optsEl.querySelector("#savePractical").onclick = () => {
-    const txt = optsEl.querySelector("#practicalAnswer").value || "";
-    savePracticalProgress(p.id, txt);
-    alert("Guardado.");
-  };
-
-  optsEl.querySelector("#showSolution").onclick = () => {
-    const box = optsEl.querySelector("#solutionBox");
-    box.style.display = "block";
-    box.innerHTML = `<strong>Solución / guía</strong><br>${escapeHtml(p.solution || "Sin solución todavía.").replaceAll("\n","<br>")}`;
-  };
-}
-
-function escapeHtml(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-const PRACTICALS_STORE = "opostudy_practicals_progress_v1";
-
-function loadPracticalProgress(){
-  try { return JSON.parse(localStorage.getItem(PRACTICALS_STORE) || "{}"); }
-  catch { return {}; }
-}
-
-function savePracticalProgress(id, answer){
-  const store = loadPracticalProgress();
-  store[id] = { answer, updated_at: new Date().toISOString() };
-  localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
-}
-
-
-
-
-
-
-
