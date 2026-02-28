@@ -468,7 +468,7 @@ body{
 
 /* Banda superior (amarillo/turquesa) limitada en altura */
 :root{
-  --topband-h: 380px; /* ajusta: súbelo/bájalo según dónde quieras cortar */
+  --topband-h: 400px; /* ajusta: súbelo/bájalo según dónde quieras cortar */
 }
 
 .layout{
@@ -490,6 +490,7 @@ body{
     radial-gradient(900px 520px at 90% 0%, rgba(4,151,167,.18), transparent 62%),
     linear-gradient(180deg, #fff6dc 0%, #ffffff 70%);
 }
+
 
 
 
