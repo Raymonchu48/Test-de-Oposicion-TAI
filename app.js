@@ -16,6 +16,8 @@ const countSelect = document.getElementById("countSelect");
 const timerToggle = document.getElementById("timerToggle");
 const startBtn = document.getElementById("startBtn");
 const blockHint = document.getElementById("blockHint");
+const practiceKindWrap = document.getElementById("practiceKindWrap");
+const practiceKindSegment = document.getElementById("practiceKindSegment");
 
 // KPI refs
 const kpiAnswered = document.getElementById("kpiAnswered");
@@ -614,5 +616,6 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
 
 
