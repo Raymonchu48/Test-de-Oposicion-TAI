@@ -6,6 +6,8 @@ const sb = supabase.createClient(
 );
 
 const STORAGE_KEY = "opostudy_stats_v1";
+const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
+const MISTAKES_LOOKBACK_DAYS = 30; // repaso por defecto: últimos 30 días
 
 // UI refs
 const modeSegment = document.getElementById("modeSegment");
@@ -97,6 +99,11 @@ function setMode(mode, opts = {}) {
     blockSelect.disabled = false;
     blockHint.style.display = "none";
   }
+  if (mode === "mistakes") {
+  blockSelect.disabled = false; // lo dejamos para filtrar fallos por bloque si quieres
+  blockHint.style.display = "block";
+  blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
+}
 
   // Count suggestion
   if (!opts.silent) {
@@ -114,7 +121,18 @@ function setMode(mode, opts = {}) {
 }
 
 function syncStartEnabled() {
-  const ok = state.mode === "full" || !!state.block;
+  let ok = false;
+
+  if (state.mode === "full") {
+    ok = true;
+  } else if (state.mode === "mistakes") {
+    // si hay bloque seleccionado, filtra; si no, todos
+    const blockFilter = state.block ? Number(state.block) : null;
+    ok = getPendingMistakesCount(blockFilter) > 0;
+  } else {
+    ok = !!state.block;
+  }
+
   startBtn.disabled = !ok;
 }
 
@@ -125,11 +143,17 @@ async function startTest() {
       return;
     }
 
-    const data = await fetchQuestions({
-      mode: state.mode,
-      block: state.block,
-      count: state.count,
-    });
+   let data = [];
+
+if (state.mode === "mistakes") {
+  data = await fetchMistakeQuestions();
+} else {
+  data = await fetchQuestions({
+    mode: state.mode,
+    block: state.block,
+    count: state.count,
+  });
+}
 
     if (!data.length) {
       alert("No hay preguntas disponibles para esa selección.");
@@ -150,7 +174,47 @@ async function startTest() {
     alert("Error cargando preguntas: " + (e?.message || JSON.stringify(e)));
   }
 }
+async function fetchMistakeQuestions() {
+  const blockFilter = state.block ? Number(state.block) : null;
+  const ids = getPendingMistakeIds({ block: blockFilter });
 
+  if (!ids.length) return [];
+
+  // Limitar a lo pedido (barajar luego)
+  const take = Math.min(Number(state.count), ids.length);
+  const chosenIds = shuffleArray(ids).slice(0, take);
+
+  const { data, error } = await sb
+    .from("questions")
+    .select("*")
+    .in("id", chosenIds);
+
+  if (error) throw error;
+
+  // Barajar para orden aleatorio
+  const shuffled = shuffleArray(data || []);
+
+  return shuffled.map((q) => ({
+    id: q.id,
+    block: q.block,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    statement: q.statement,
+    options: normalizeOptions(q.options),
+    correctIndex: q.correct_index,
+    explanation: q.explanation || "",
+    reference: q.reference || "",
+  }));
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 async function fetchQuestions({ mode, block, count }) {
   const params = {
     p_count: Number(count),
@@ -341,6 +405,12 @@ function goNext() {
 
   const q = state.questions[state.index];
   const isCorrect = state.selected === q.correctIndex;
+  if (!isCorrect) {
+  upsertMistake(q.id, q.block, q.topic);
+} else if (state.mode === "mistakes") {
+  // Si lo aciertas en repaso, lo quitamos de "pendientes"
+  resolveMistake(q.id);
+}
 
   state.answers.push({
     id: q.id,
@@ -478,6 +548,69 @@ function renderKpis() {
     : 0;
   kpiAccuracy.textContent = `${acc}%`;
   kpiStreak.textContent = String(state.stats.streakDays);
-  kpiMistakes.textContent = String(state.stats.mistakes);
+  kpiMistakes.textContent = String(getPendingMistakesCount(null));
 
 }
+function loadMistakes() {
+  const raw = localStorage.getItem(STORAGE_MISTAKES_KEY);
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
+function saveMistakes(list) {
+  localStorage.setItem(STORAGE_MISTAKES_KEY, JSON.stringify(list));
+}
+
+function upsertMistake(questionId, block, topic) {
+  const list = loadMistakes();
+  const now = new Date().toISOString();
+
+  const idx = list.findIndex(m => m.id === questionId && !m.resolved_at);
+  if (idx >= 0) {
+    list[idx].wrong_count = (list[idx].wrong_count || 1) + 1;
+    list[idx].last_seen = now;
+  } else {
+    list.push({
+      id: questionId,
+      block,
+      topic,
+      wrong_count: 1,
+      first_seen: now,
+      last_seen: now,
+      resolved_at: null
+    });
+  }
+
+  saveMistakes(list);
+}
+
+function resolveMistake(questionId) {
+  const list = loadMistakes();
+  const now = new Date().toISOString();
+  const idx = list.findIndex(m => m.id === questionId && !m.resolved_at);
+  if (idx >= 0) {
+    list[idx].resolved_at = now;
+    saveMistakes(list);
+  }
+}
+
+function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_DAYS } = {}) {
+  const list = loadMistakes();
+  const now = Date.now();
+  const maxAgeMs = lookbackDays * 24 * 60 * 60 * 1000;
+
+  return list
+    .filter(m => !m.resolved_at)
+    .filter(m => (block ? Number(m.block) === Number(block) : true))
+    .filter(m => {
+      const t = Date.parse(m.last_seen || m.first_seen || "");
+      if (!Number.isFinite(t)) return true;
+      return (now - t) <= maxAgeMs;
+    })
+    .map(m => m.id);
+}
+
+function getPendingMistakesCount(block = null) {
+  return getPendingMistakeIds({ block }).length;
+}
+
