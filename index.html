@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OpoStudy</title>
   <link rel="manifest" href="./manifest.json" />
-  <meta name="theme-color" content="#4361ee" />
+  <meta name="theme-color" content="#0497a7" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="./app.css" />
@@ -85,35 +85,41 @@
     </section>
 
     <aside class="stack">
-      <section class="card hero-card" aria-label="Ilustración">
-  <img class="hero-img" src="./hero.png" alt="Ilustración de estudio" loading="lazy">
-        <h2 class="card__title">Progreso</h2>
-        <div class="kpi-grid">
-          <div class="kpi"><div class="kpi__num" id="kpiAnswered">0</div><div class="kpi__label">Respondidas</div></div>
-          <div class="kpi"><div class="kpi__num" id="kpiAccuracy">0%</div><div class="kpi__label">Acierto</div></div>
-          <div class="kpi"><div class="kpi__num" id="kpiStreak">0</div><div class="kpi__label">Racha</div></div>
-          <div class="kpi"><div class="kpi__num" id="kpiMistakes">0</div><div class="kpi__label">Fallos guardados</div></div>
-        </div>
-      </section>
 
-      <section class="card">
-        <h2 class="card__title">Plan de estudio</h2>
-        <div class="plan">
-          <div class="plan__row"><span>Objetivo diario</span><strong>15 preguntas</strong></div>
-          <div class="plan__row"><span>Revisión</span><strong>Errores de los últimos 7 días</strong></div>
-          <div class="plan__row"><span>Modo</span><strong>Examen con corrección</strong></div>
-        </div>
-      </section>
-    </aside>
+  <section class="card hero-card" aria-label="Ilustración">
+    <img class="hero-img" src="./hero.png" alt="Ilustración de estudio" loading="lazy">
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">Progreso</h2>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi__num" id="kpiAnswered">0</div><div class="kpi__label">Respondidas</div></div>
+      <div class="kpi"><div class="kpi__num" id="kpiAccuracy">0%</div><div class="kpi__label">Acierto</div></div>
+      <div class="kpi"><div class="kpi__num" id="kpiStreak">0</div><div class="kpi__label">Racha</div></div>
+      <div class="kpi"><div class="kpi__num" id="kpiMistakes">0</div><div class="kpi__label">Fallos guardados</div></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 class="card__title">Plan de estudio</h2>
+    <div class="plan">
+      <div class="plan__row"><span>Objetivo diario</span><strong>15 preguntas</strong></div>
+      <div class="plan__row"><span>Revisión</span><strong>Errores de los últimos 7 días</strong></div>
+      <div class="plan__row"><span>Modo</span><strong>Examen con corrección</strong></div>
+    </div>
+  </section>
+
+</aside>
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="./config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="./config.js"></script>
 <script src="./app.js"></script>
 </body>
 
 </html>
+
 
 
 
