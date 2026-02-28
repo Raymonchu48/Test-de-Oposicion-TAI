@@ -58,6 +58,20 @@ function init() {
     setMode(btn.dataset.mode);
   });
 
+  // ✅ Submodo de práctica (solo si existe el bloque en el HTML)
+  if (practiceKindSegment) {
+    practiceKindSegment.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-kind]");
+      if (!btn) return;
+
+      state.practiceKind = btn.dataset.kind;
+
+      practiceKindSegment.querySelectorAll(".segmented__btn").forEach((b) => {
+        b.classList.toggle("is-active", b.dataset.kind === state.practiceKind);
+      });
+    });
+  }
+
   // Block
   blockSelect.addEventListener("change", () => {
     state.block = blockSelect.value ? Number(blockSelect.value) : null;
@@ -83,20 +97,6 @@ function init() {
   // Default mode visual
   setMode("exam", { silent: true });
 }
-
-  // ✅ Listener del submodo de práctica
-  if (practiceKindSegment) {
-    practiceKindSegment.addEventListener("click", (e) => {
-      const btn = e.target.closest('button[data-kind]');
-      if (!btn) return;
-
-      state.practiceKind = btn.dataset.kind;
-
-      practiceKindSegment.querySelectorAll(".segmented__btn").forEach(b => {
-        b.classList.toggle("is-active", b.dataset.kind === state.practiceKind);
-      });
-    });
-  }
 
   
 function setMode(mode, opts = {}) {
@@ -631,6 +631,7 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
 
 
 
