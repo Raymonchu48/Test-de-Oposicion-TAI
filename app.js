@@ -98,30 +98,39 @@ function init() {
   setMode("exam", { silent: true });
 }
 
-  
-function setMode(mode, opts = {}) {
+  function setMode(mode, opts = {}) {
   state.mode = mode;
 
-  // UI active state
-  document.querySelectorAll(".segmented__btn").forEach((b) => {
+  // UI active state (solo botones de modo)
+  document.querySelectorAll('#modeSegment .segmented__btn').forEach((b) => {
     b.classList.toggle("is-active", b.dataset.mode === mode);
   });
 
-  // UX rules
+  // Mostrar/ocultar submodo de práctica
+  if (practiceKindWrap) {
+    practiceKindWrap.style.display = (mode === "practice") ? "block" : "none";
+  }
+
+  // Reset hint por defecto
+  blockHint.textContent = "En modo “Completo” no hace falta elegir bloque.";
+
+  // UX rules por modo
   if (mode === "full") {
+    // Completo: bloque no aplica
     blockSelect.value = "";
     state.block = null;
     blockSelect.disabled = true;
     blockHint.style.display = "block";
+  } else if (mode === "mistakes") {
+    // Repaso fallos: bloque opcional como filtro
+    blockSelect.disabled = false;
+    blockHint.style.display = "block";
+    blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
   } else {
+    // exam / practice: bloque requerido
     blockSelect.disabled = false;
     blockHint.style.display = "none";
   }
-  if (mode === "mistakes") {
-  blockSelect.disabled = false; // lo dejamos para filtrar fallos por bloque si quieres
-  blockHint.style.display = "block";
-  blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
-}
 
   // Count suggestion
   if (!opts.silent) {
@@ -129,6 +138,8 @@ function setMode(mode, opts = {}) {
       countSelect.value = "30";
       state.count = 30;
     }
+
+    // En práctica test seguimos con 15 por defecto; en prácticos no importa tanto, lo dejamos
     if ((mode === "exam" || mode === "practice") && Number(countSelect.value) > 15) {
       countSelect.value = "15";
       state.count = 15;
@@ -631,6 +642,7 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
 
 
 
