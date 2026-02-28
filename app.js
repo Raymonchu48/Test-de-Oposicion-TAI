@@ -305,7 +305,26 @@ async function fetchQuestions({ mode, block, count }) {
     p_block: mode === "full" ? null : Number(block),
     p_topic: null,
   };
+async function startPractical() {
+  if (!state.block) {
+    alert("Selecciona un bloque para ver el trabajo práctico.");
+    return;
+  }
 
+  const { data, error } = await sb.rpc("get_random_practicals", {
+    p_count: 1,
+    p_block: Number(state.block),
+  });
+
+  if (error) throw error;
+  if (!data || !data.length) {
+    alert("No hay prácticos cargados para ese bloque todavía.");
+    return;
+  }
+
+  openModal();
+  renderPractical(data[0]);
+}
   const { data, error } = await sb.rpc("get_random_questions", params);
   if (error) throw error;
 
@@ -768,6 +787,7 @@ function savePracticalProgress(id, answer){
   store[id] = { answer, updated_at: new Date().toISOString() };
   localStorage.setItem(PRACTICALS_STORE, JSON.stringify(store));
 }
+
 
 
 
