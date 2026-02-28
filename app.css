@@ -491,6 +491,30 @@ body{
     linear-gradient(180deg, #fff6dc 0%, #ffffff 70%);
 }
 
+.textarea{
+  width:100%;
+  border-radius:14px;
+  padding:12px 14px;
+  border:1px solid rgba(4,53,73,.18);
+  background:#eef8fb;
+  font-size:1rem;
+  color:#043549;
+  outline:none;
+}
+.textarea:focus{
+  border-color: rgba(4,151,167,.55);
+  box-shadow: 0 0 0 4px rgba(4,151,167,.18);
+}
+
+.practical{ display:flex; flex-direction:column; gap:12px; }
+.practical__prompt, .practical__deliverable, .practical__solution{
+  padding:12px 14px;
+  border-radius:14px;
+  border:1px solid rgba(4,53,73,.12);
+  background:#f7fbfc;
+}
+.practical__actions{ display:flex; gap:10px; margin-top:8px; }
+@media (max-width: 520px){ .practical__actions{ flex-direction:column; } }
 
 
 
