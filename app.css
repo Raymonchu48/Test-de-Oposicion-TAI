@@ -101,8 +101,20 @@ body{
 .switch input:checked + .switch__ui::after{
   transform: translateX(20px);
 }
-.switch__text{color:var(--muted); font-weight:600; font-size:.9rem}
+.switch__text{color:var(--muted); font-weight:700; font-size:.9rem}
 
+.switch{
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #eef8fb;
+  border: 1px solid rgba(4,53,73,.12);
+}
+
+.switch__text{
+  font-weight: 700;
+  color: #043549;
+}
 .plan__row{
   display:flex; justify-content:space-between;
   padding:10px 0; border-bottom:1px solid var(--border);
@@ -258,7 +270,21 @@ body{
   border:1px solid var(--border);
   border-radius: var(--r);
   box-shadow: var(--shadow);
-  padding:18px;
+  padding:22px;
+}
+.field{
+  margin-bottom: 18px;
+}
+
+.label{
+  margin-bottom: 10px;
+  font-weight: 700;
+  color: #043549;
+}
+
+.hint{
+  margin-top: 10px;
+  line-height: 1.4;
 }
 
 .segmented{
@@ -373,14 +399,14 @@ body{
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 54px;
+  min-height: 58px;
   padding: 18px 18px;
-  margin-top: 12px;
+  margin-top: 16px;
 
   border: 0;
-  border-radius: 14px;
-  font-size: 1.15rem;
-  font-weight: 800;
+  border-radius: 16px;
+  font-size: 1.20rem;
+  font-weight: 900;
   letter-spacing: .2px;
 
   background: linear-gradient(135deg, #0497a7, #057f8c);
@@ -395,6 +421,26 @@ body{
   background: linear-gradient(135deg, rgba(4,151,167,.45), rgba(5,127,140,.45));
   box-shadow: none;
   color: rgba(255,255,255,.95);
+    box-shadow: none;
+}
+
+/* Inputs más grandes y consistentes */
+.select{
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 1rem;
+  background: #eef8fb;
+  border: 1px solid rgba(4,53,73,.18);
+}
+
+.select:focus{
+  border-color: rgba(4,151,167,.55);
+  box-shadow: 0 0 0 4px rgba(4,151,167,.18);
+}
+.grid2{
+  gap: 16px;
+  margin-top: 6px;
 }
 
 
