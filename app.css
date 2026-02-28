@@ -180,6 +180,18 @@ body{
   border:1px solid var(--border);
   color: var(--text);
 }
+/* CTA principal */
+#startBtn{
+  padding: 18px 18px;
+  font-size: 1.15rem;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+#startBtn.btn--primary{
+  background: linear-gradient(135deg, #0497a7, #057f8c);
+  box-shadow: 0 14px 28px rgba(4,151,167,.22);
+}
 .quiz__progress{ padding: 0 18px 14px; }
 .quiz__bar{
   height:8px;
@@ -354,4 +366,5 @@ body{
   .res__actions{ flex-direction:column; }
 
 }
+
 
