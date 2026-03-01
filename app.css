@@ -1087,6 +1087,66 @@ body::before{
 .hint, .kpi__label, .plan__row span{
   color: rgba(4,53,73,.78) !important;
 }
+/* ===== Texto tipo “neón” como el banner (más contraste) ===== */
+
+/* Títulos (Progreso / Plan de estudio) */
+.card__title{
+  color: rgba(255,255,255,.94) !important;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.22),
+    0 10px 26px rgba(255, 80, 110, .22) !important;
+}
+
+/* Labels generales dentro de cards */
+.card, .card *{
+  color: rgba(255,255,255,.86);
+}
+
+/* Texto secundario (labels pequeños) */
+.kpi__label,
+.plan__row span,
+.hint,
+.quiz__sub{
+  color: rgba(255,255,255,.72) !important;
+  text-shadow: 0 8px 20px rgba(0,0,0,.18) !important;
+}
+
+/* Números KPI (0, 0%) con más “poder” */
+.kpi__num{
+  color: rgba(255,255,255,.98) !important;
+  font-weight: 950 !important;
+  letter-spacing: .3px !important;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.25),
+    0 0 18px rgba(255, 80, 110, .28) !important;
+}
+
+/* Valores a la derecha del plan (15 preguntas, etc.) */
+.plan__row strong{
+  color: rgba(255,255,255,.92) !important;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.22),
+    0 0 14px rgba(255, 80, 110, .18) !important;
+}
+
+/* Bordes internos un poco más visibles */
+.kpi,
+.plan__row{
+  border-color: rgba(255,255,255,.22) !important;
+}
+
+/* Si quieres que el texto oscuro (como antes) NO se imponga */
+.label,
+.segmented__btn,
+.select{
+  color: rgba(255,255,255,.86) !important;
+}
+
+/* Select: que no se pierda */
+.select{
+  background: rgba(255,255,255,.10) !important;
+  border-color: rgba(255,255,255,.26) !important;
+}
 
 
 
