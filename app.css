@@ -920,5 +920,7 @@ body::before{
   background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
 
+/* TEST: si ves un borde rojo, el CSS está cargando */
+.card { outline: 4px solid red !important; }
 
 
