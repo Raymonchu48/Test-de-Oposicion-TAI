@@ -968,6 +968,14 @@ body::before{
 .card .segmented{ background: rgba(255,255,255,.65) !important; }
 .card .select{ background: rgba(255,255,255,.78) !important; }
 .card .btn--primary{ color:#fff !important; }
+/* ===== Más visible sin perder legibilidad ===== */
+.card::before{
+  opacity: .90 !important;   /* sube el fondo */
+}
+
+.card::after{
+  background: rgba(255,255,255,.62) !important; /* baja el “glass” */
+}
 
 
 
