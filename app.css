@@ -94,8 +94,9 @@ body{
   width:40px;
   height:40px;
   border-radius:12px;
-  object-fit: cover;
-  display:block;
+  background-image: url("./logo.png");
+  background-size: cover;
+  background-position: center;
   box-shadow: 0 10px 22px rgba(4,151,167,.18);
 }
 
@@ -534,4 +535,5 @@ body{
 
 .practical__actions{ display:flex; gap:10px; margin-top:8px; }
 @media (max-width: 520px){ .practical__actions{ flex-direction:column; } }
+
 
