@@ -645,6 +645,41 @@ body{
 .hint--motivation strong{
   color: var(--text);
 }
+/* Hint pro con avatar */
+.hint--motivation{
+  display:flex;
+  gap:12px;
+  align-items:center;
+
+  margin-top: 14px;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px solid rgba(4,151,167,.22);
+  background: rgba(4,151,167,.06);
+}
+
+.hint__avatar{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;            /* cuadrado redondeado (pro) */
+  object-fit: cover;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(4,53,73,.14);
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  flex: 0 0 auto;
+}
+
+.hint--motivation .hint__text{
+  line-height: 1.35;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.hint--motivation .hint__text strong{
+  color: var(--text);
+  font-weight: 900;
+}
 
 
 
