@@ -1170,6 +1170,87 @@ body::before{
   border-bottom-color: rgba(255,255,255,.18) !important;
 }
 
+/* ==========================
+   RED NEON TEXT (sobre frosted glass)
+   Mantiene el glass y pone texto/números en rojo
+   ========================== */
+
+:root{
+  --neon-red: rgba(255, 70, 70, 1);
+  --neon-red-soft: rgba(255, 70, 70, .78);
+  --neon-glow: rgba(255, 70, 70, .38);
+}
+
+/* Títulos de tarjetas */
+.card__title{
+  color: var(--neon-red) !important;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.18),
+    0 0 18px var(--neon-glow),
+    0 10px 30px rgba(0,0,0,.18) !important;
+}
+
+/* Etiquetas (Modo, Bloque, Preguntas, Temporizador, etc.) */
+.label{
+  color: var(--neon-red-soft) !important;
+  text-shadow:
+    0 0 12px rgba(255, 70, 70, .20),
+    0 8px 22px rgba(0,0,0,.14) !important;
+}
+
+/* Números KPI (0, 0%) */
+.kpi__num{
+  color: rgba(255,255,255,.98) !important; /* base clara */
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.18),
+    0 0 22px var(--neon-glow) !important;
+}
+
+/* Para que el “0” y el “0%” sean rojo directamente */
+.kpi__num{
+  color: var(--neon-red) !important;
+  font-weight: 950 !important;
+}
+
+/* Texto secundario */
+.kpi__label,
+.plan__row span,
+.hint,
+.quiz__sub{
+  color: rgba(255,255,255,.80) !important;  /* legible sobre glass */
+  text-shadow: 0 8px 18px rgba(0,0,0,.18) !important;
+}
+
+/* Valores del plan (15 preguntas, etc.) */
+.plan__row strong{
+  color: var(--neon-red) !important;
+  text-shadow:
+    0 2px 0 rgba(0,0,0,.18),
+    0 0 16px rgba(255, 70, 70, .28) !important;
+}
+
+/* Botones del segmented: texto más vivo */
+.segmented__btn{
+  color: rgba(255,255,255,.88) !important;
+  text-shadow: 0 8px 18px rgba(0,0,0,.16) !important;
+}
+.segmented__btn.is-active{
+  color: rgba(255,255,255,.96) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.30),
+    0 0 18px rgba(255, 70, 70, .16) !important;
+}
+
+/* Select: texto visible */
+.select{
+  color: rgba(255,255,255,.90) !important;
+}
+
+/* Hint: “STATUS: READY” en rojo */
+#motivationHint::after{
+  color: rgba(255, 70, 70, .85) !important;
+  text-shadow: 0 0 14px rgba(255, 70, 70, .20) !important;
+}
 
 
 
