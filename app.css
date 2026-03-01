@@ -717,8 +717,8 @@ body::before{
   position:absolute;
   inset:-40px -60px -40px -60px;
   background:
-    radial-gradient(220px 160px at 15% 20%, rgba(4,151,167,.14), transparent 70%),
-    radial-gradient(260px 180px at 85% 35%, rgba(4,151,167,.10), transparent 70%),
+    radial-gradient(220px 160px at 15% 20%, rgba(4,151,167,.16), transparent 70%),
+    radial-gradient(260px 180px at 85% 35%, rgba(4,151,167,.12), transparent 70%),
     linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,255,255,0));
   opacity: .9;
   pointer-events:none;
@@ -738,6 +738,7 @@ body::before{
 .card--plan > *{
   position: relative;
 }
+
 
 
 
