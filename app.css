@@ -697,7 +697,7 @@ body::before{
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: .75;
+  opacity: .50;
   background-image:
     linear-gradient(rgba(4,53,73,.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(4,53,73,.03) 1px, transparent 1px);
@@ -976,6 +976,7 @@ body::before{
 .card::after{
   background: rgba(255,255,255,.62) !important; /* baja el “glass” */
 }
+
 
 
 
