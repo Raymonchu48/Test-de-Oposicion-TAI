@@ -1,5 +1,6 @@
 /* =========================
-   OpoStudy · app.css (clean)
+   OpoStudy · app.css (FINAL)
+   Fondo imagen + cards legibles
    ========================= */
 
 /* Variables */
@@ -15,9 +16,6 @@
   --highlight:#f7b511;
   --shadow:0 10px 30px rgba(4,53,73,.12);
   --r: 16px;
-
-  /* Banda superior */
-  --topband-h: 0px; /* ajusta si quieres más/menos amarillo */
 }
 
 /* Reset/base */
@@ -28,7 +26,31 @@ body{
   margin:0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background: var(--bg);
+
+  /* Fondo con imagen */
+  position: relative;
+  isolation: isolate;
+  background: url("./bg-datacenter.webp") center/cover no-repeat fixed;
+}
+
+/* Overlay de legibilidad */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,.82) 0%,
+    rgba(255,255,255,.62) 55%,
+    rgba(255,255,255,.78) 100%
+  );
+}
+
+/* iOS: evita saltos del fixed */
+@supports (-webkit-touch-callout: none){
+  body{ background-attachment: scroll; }
 }
 
 .no-scroll{ overflow:hidden; }
@@ -50,30 +72,12 @@ body{
 
 .stack{ display:flex; flex-direction:column; gap:18px; }
 
-/* Banda superior controlada */
-.layout::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  transform: translateX(-50%);
-  top:-18px;
-  width:100vw;
-  height: var(--topband-h);
-  z-index:-1;
-  background:
-    radial-gradient(900px 520px at 18% -10%, rgba(247,181,17,.38), transparent 60%),
-    radial-gradient(900px 520px at 90% 0%, rgba(4,151,167,.18), transparent 62%),
-    linear-gradient(180deg, #fff6dc 0%, #ffffff 70%);
-}
-
-/* ===== Header con banner + texto legible "fusionado" ===== */
-
+/* ===== Header con banner + texto legible ===== */
 .topbar{
   position: sticky;
   top: 0;
   z-index: 10;
 
-  /* banner */
   background-image: url("./header-banner.webp");
   background-size: cover;
   background-position: center;
@@ -82,17 +86,14 @@ body{
   border-bottom: 1px solid rgba(4,53,73,.14);
 }
 
-/* Capa overlay para que el texto se lea */
 .topbar::before{
   content:"";
   position:absolute;
   inset:0;
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.42) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,.05) 100%);
+  background: linear-gradient(90deg, rgba(0,0,0,.42) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,.05) 100%);
   pointer-events:none;
 }
 
-/* asegura que el contenido vaya por encima del overlay */
 .topbar__inner{
   position: relative;
   max-width: 1100px;
@@ -103,22 +104,18 @@ body{
   justify-content: space-between;
 }
 
-/* Bloque de marca con efecto "glass" */
 .brand{
   display:flex;
   align-items:center;
   gap:12px;
-
   padding: 10px 12px;
   border-radius: 18px;
-
   background: rgba(246, 243, 215, .55);
   backdrop-filter: blur(10px);
   box-shadow: 0 10px 24px rgba(0,0,0,.18);
   border: 1px solid rgba(255,255,255,.22);
 }
 
-/* El logo cuadrado que ya tienes */
 .brand__logo{
   width:40px;
   height:40px;
@@ -128,7 +125,6 @@ body{
   box-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 
-/* Texto: que "funda" con el banner pero se lea */
 .brand__name{
   font-family: "Fredoka", Inter, system-ui, sans-serif;
   font-weight: 800;
@@ -136,11 +132,8 @@ body{
   line-height: 1;
   letter-spacing: .6px;
   text-transform: uppercase;
-
   color: #2e8b57;
-  text-shadow:
-    0 3px 0 rgba(0,0,0,.18),
-    0 10px 22px rgba(0,0,0,.18);
+  text-shadow: 0 3px 0 rgba(0,0,0,.18), 0 10px 22px rgba(0,0,0,.18);
 }
 
 .brand__sub{
@@ -148,19 +141,18 @@ body{
   font-family: "Fredoka", Inter, system-ui, sans-serif;
   font-weight: 700;
   font-size: 1.05rem;
-
   color: #2e8b57;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.14),
-    0 10px 22px rgba(0,0,0,.14);
+  text-shadow: 0 2px 0 rgba(0,0,0,.14), 0 10px 22px rgba(0,0,0,.14);
 }
-/* Cards */
+
+/* Cards (glass) */
 .card{
-  background: linear-gradient(180deg, var(--panel), #ffffff);
+  background: rgba(255,255,255,.90);
   border:1px solid var(--border);
   border-radius: var(--r);
-  box-shadow: var(--shadow);
+  box-shadow: 0 14px 36px rgba(4,53,73,.14);
   padding: 22px;
+  backdrop-filter: blur(10px);
 }
 
 .card__title{
@@ -189,7 +181,7 @@ body{
 .segmented{
   display:flex;
   gap:8px;
-  background: var(--panel2);
+  background: rgba(255,255,255,.70);
   border:1px solid var(--border);
   padding:6px;
   border-radius:14px;
@@ -219,7 +211,7 @@ body{
   padding: 12px 14px;
   border-radius: 14px;
   font-size: 1rem;
-  background: var(--panel2);
+  background: rgba(255,255,255,.78);
   border: 1px solid rgba(4,53,73,.18);
   color: var(--text);
   outline:none;
@@ -264,7 +256,7 @@ body{
 }
 
 .btn--ghost{
-  background: rgba(250,252,250,.70);
+  background: rgba(250,252,250,.78);
   border:1px solid var(--border);
   color: var(--text);
 }
@@ -301,7 +293,7 @@ body{
   align-items:center;
   padding: 10px 12px;
   border-radius: 14px;
-  background: var(--panel2);
+  background: rgba(255,255,255,.70);
   border: 1px solid rgba(4,53,73,.12);
 }
 
@@ -311,7 +303,7 @@ body{
   width:48px;
   height:28px;
   border-radius:999px;
-  background: rgba(255,255,255,.55);
+  background: rgba(255,255,255,.85);
   border:1px solid var(--border);
   position:relative;
 }
@@ -353,11 +345,11 @@ body{
   padding:14px;
   border-radius:14px;
   border:1px solid var(--border);
-  background: inear-gradient(180deg, rgba(255,255,255,.95), rgba(238,248,251,.85));
+  background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(238,248,251,.85));
   box-shadow: 0 10px 22px rgba(4,53,73,.06);
 }
 
-.kpi__num{ font-size:1.6rem; font-weight:900;letter-spacing: .2px; }
+.kpi__num{ font-size:1.6rem; font-weight:900; letter-spacing: .2px; }
 .kpi__label{ color:var(--muted); font-size:.85rem; }
 
 /* Plan */
@@ -381,6 +373,48 @@ body{
   border-radius: 16px;
   border:1px solid rgba(4,53,73,.14);
   background:#fff;
+}
+
+/* Hint motivacional con avatar */
+.hint--motivation{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(4,151,167,.22);
+  background: rgba(4,151,167,.06);
+}
+
+.hint__avatar{
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  object-fit: cover;
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(4,53,73,.14);
+  box-shadow: 0 10px 22px rgba(0,0,0,.12);
+  flex: 0 0 auto;
+}
+
+.hint--motivation .hint__text{
+  line-height: 1.35;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.hint--motivation .hint__text strong{
+  color: var(--text);
+  font-weight: 900;
+}
+
+#motivationHint::after{
+  content:"STATUS: READY";
+  margin-left:auto;
+  font-size:.75rem;
+  font-weight:900;
+  color: rgba(4,53,73,.55);
 }
 
 /* Modal */
@@ -471,7 +505,7 @@ body{
 .opt{
   width:100%;
   text-align:left;
-  background: var(--panel2);
+  background: rgba(255,255,255,.78);
   border:1px solid var(--border);
   border-radius: 14px;
   padding: 12px 14px;
@@ -493,7 +527,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.90);
   border:1px solid var(--border);
   font-weight:900;
 }
@@ -520,7 +554,7 @@ body{
   padding: 12px 14px;
   border-radius: 14px;
   border:1px solid var(--border);
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.82);
   color: var(--muted);
 }
 
@@ -546,7 +580,7 @@ body{
   border-radius:14px;
   padding:12px 14px;
   border:1px solid rgba(4,53,73,.18);
-  background: var(--panel2);
+  background: rgba(255,255,255,.78);
   font-size:1rem;
   color: var(--text);
   outline:none;
@@ -565,37 +599,11 @@ body{
   padding:12px 14px;
   border-radius:14px;
   border:1px solid rgba(4,53,73,.12);
-  background: var(--panel);
+  background: rgba(255,255,255,.88);
 }
 
 .practical__actions{ display:flex; gap:10px; margin-top:8px; }
 @media (max-width: 520px){ .practical__actions{ flex-direction:column; } }
-
-/* Header = banner (exactamente como la imagen) */
-.topbar--banner{
-  position: sticky; /* si NO lo quieres fijo, cambia a position: relative; */
-  top: 0;
-  z-index: 10;
-  padding: 0;
-  border: 0;
-  background: none;
-}
-
-.topbar__banner{
-  width: 100%;
-  height: auto;      /* mantiene proporción: NO recorta */
-  display: block;
-}
-
-.topbar__install{
-  position: absolute;
-  top: 14px;
-  right: 18px;
-  z-index: 2;
-  background: rgba(255,255,255,.78);
-  border: 1px solid rgba(0,0,0,.12);
-  backdrop-filter: blur(8px);
-}
 
 /* Accesibilidad/SEO: título oculto */
 .sr-only{
@@ -609,379 +617,6 @@ body{
   white-space:nowrap;
   border:0;
 }
-/* Hint motivacional integrado, estilo informática */
-.hint--motivation{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
-
-  margin-top: 14px;
-  padding: 12px 14px;
-
-  border-radius: 14px;
-  border: 1px dashed rgba(4,151,167,.35);
-  background: linear-gradient(90deg, rgba(4,151,167,.10), rgba(247,181,17,.08));
-}
-  color: var(--text);
-}
-
-.hint--motivation .hint__icon{
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(4,53,73,.12);
-  flex: 0 0 auto;
-}
-
-.hint--motivation .hint__text{
-  line-height: 1.35;
-  color: var(--muted);
-}
-
-.hint--motivation strong{
-  color: var(--text);
-}
-/* Hint pro con avatar */
-.hint--motivation{
-  display:flex;
-  gap:12px;
-  align-items:center;
-
-  margin-top: 14px;
-  padding: 12px 14px;
-
-  border-radius: 14px;
-  border: 1px solid rgba(4,151,167,.22);
-  background: rgba(4,151,167,.06);
-}
-
-.hint__avatar{
-  width: 42px;
-  height: 42px;
-  border-radius: 14px;            /* cuadrado redondeado (pro) */
-  object-fit: cover;
-  background: rgba(255,255,255,.85);
-  border: 1px solid rgba(4,53,73,.14);
-  box-shadow: 0 10px 22px rgba(0,0,0,.12);
-  flex: 0 0 auto;
-}
-
-.hint--motivation .hint__text{
-  line-height: 1.35;
-  color: var(--muted);
-  font-weight: 600;
-}
-
-.hint--motivation .hint__text strong{
-  color: var(--text);
-  font-weight: 900;
-}
-
-/* ===== Fondo “circuito” sutil (pro) ===== */
-body{
-  background:
-    radial-gradient(900px 520px at 12% 0%, rgba(4,151,167,.12), transparent 60%),
-    radial-gradient(900px 520px at 90% 10%, rgba(247,181,17,.10), transparent 62%),
-    linear-gradient(180deg, #ffffff 0%, #f6fbfd 55%, #ffffff 100%);
-}
-
-/* Grid técnico muy suave en el fondo */
-body::before{
-  content:"";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: .50;
-  background-image:
-    linear-gradient(rgba(4,53,73,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(4,53,73,.03) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-
-/* ===== Cards destacadas: Progreso y Plan ===== */
-.card--progress,
-.card--plan{
-  position: relative;
-  overflow: hidden;
-}
-
-/* brillo/patrón dentro de cada card (muy sutil) */
-.card--progress::before,
-.card--plan::before{
-  content:"";
-  position:absolute;
-  inset:-40px -60px -40px -60px;
-  background:
-    radial-gradient(220px 160px at 15% 20%, rgba(4,151,167,.16), transparent 70%),
-    radial-gradient(260px 180px at 85% 35%, rgba(4,151,167,.12), transparent 70%),
-    linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,255,255,0));
-  opacity: .9;
-  pointer-events:none;
-}
-
-/* barra lateral para jerarquía visual */
-.card--progress{
-  border-left: 6px solid rgba(4,151,167,.55);
-}
-
-.card--plan{
-  border-left: 6px solid rgba(247,181,17,.55);
-}
-
-/* asegura que el contenido quede por encima del overlay */
-.card--progress > * ,
-.card--plan > *{
-  position: relative;
-}
-#motivationHint::after{
-  content:"STATUS: READY";
-  margin-left:auto;
-  font-size:.75rem;
-  font-weight:900;
-  color: rgba(4,53,73,.55);
-}
-
-/* ===== Card background estilo "cyber pastel" (sin perder legibilidad) ===== */
-.card--tech{
-  position: relative;
-  overflow: hidden;
-}
-
-/* Capa decorativa (parecida a tu ejemplo) */
-.card--tech::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  pointer-events:none;
-  opacity: .80;
-
-  background:
-    /* diagonales suaves */
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .20) 0%,
-      rgba(0, 180, 200, .20) 22%,
-      rgba(255, 120, 200, .18) 22%,
-      rgba(255, 120, 200, .18) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-
-    /* circuitos: líneas finas */
-    repeating-linear-gradient(
-      0deg,
-      rgba(4,53,73,.08) 0px,
-      rgba(4,53,73,.08) 1px,
-      transparent 1px,
-      transparent 18px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(4,53,73,.06) 0px,
-      rgba(4,53,73,.06) 1px,
-      transparent 1px,
-      transparent 22px
-    ),
-
-    /* nodos */
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
-}
-
-/* Capa “glass” que garantiza lectura */
-.card--tech::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background: rgba(255,255,255,.70);
-  backdrop-filter: blur(10px);
-}
-
-/* El contenido siempre por encima */
-.card--tech > *{
-  position: relative;
-  z-index: 1;
-}
-
-/* ===== Asegurar legibilidad de controles dentro de cards con fondo ===== */
-.card--tech .segmented{
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(4,53,73,.14);
-}
-
-.card--tech .select{
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(4,53,73,.18);
-}
-
-.card--tech .label,
-.card--tech .card__title{
-  color: var(--text);
-}
-
-.card--tech .hint{
-  color: rgba(4,53,73,.65);
-}
-
-/* Botón principal siempre sólido y legible */
-.card--tech .btn--primary{
-  color:#fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-
-/* ===== Todas las tarjetas con fondo “cyber pastel” + legibilidad ===== */
-.card{
-  position: relative;
-  overflow: hidden;
-}
-
-/* Capa decorativa (fondo estilo circuito pastel) */
-.card::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  pointer-events:none;
-  opacity: .55;
-
-  background:
-    /* diagonales pastel */
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .20) 0%,
-      rgba(0, 180, 200, .20) 22%,
-      rgba(255, 120, 200, .18) 22%,
-      rgba(255, 120, 200, .18) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-
-    /* “circuitos” */
-    repeating-linear-gradient(
-      0deg,
-      rgba(4,53,73,.08) 0px,
-      rgba(4,53,73,.08) 1px,
-      transparent 1px,
-      transparent 18px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(4,53,73,.06) 0px,
-      rgba(4,53,73,.06) 1px,
-      transparent 1px,
-      transparent 22px
-    ),
-
-    /* nodos */
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
-}
-
-/* Capa “glass” para que texto/botones se lean perfecto */
-.card::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background: rgba(255,255,255,.72);
-  backdrop-filter: blur(10px);
-}
-
-/* Todo el contenido por encima */
-.card > *{
-  position: relative;
-  z-index: 1;
-}
-
-/* Controles siempre legibles dentro de las cards */
-.card .segmented{
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(4,53,73,.14);
-}
-
-.card .select{
-  background: rgba(255,255,255,.78);
-  border: 1px solid rgba(4,53,73,.18);
-}
-
-.card .hint{
-  color: rgba(4,53,73,.65);
-}
-
-/* Botón primario sólido */
-.card .btn--primary{
-  color:#fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-
-/* ===== Todas las tarjetas con fondo “cyber pastel” + legibilidad ===== */
-.card{
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.card::before{
-  content:"" !important;
-  position:absolute !important;
-  inset:-40px !important;
-  pointer-events:none !important;
-  opacity: .60 !important;
-
-  background:
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .22) 0%,
-      rgba(0, 180, 200, .22) 22%,
-      rgba(255, 120, 200, .20) 22%,
-      rgba(255, 120, 200, .20) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-    repeating-linear-gradient(0deg, rgba(4,53,73,.10) 0 1px, transparent 1px 18px),
-    repeating-linear-gradient(90deg, rgba(4,53,73,.08) 0 1px, transparent 1px 22px),
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
-}
-
-.card::after{
-  content:"" !important;
-  position:absolute !important;
-  inset:0 !important;
-  pointer-events:none !important;
-  background: rgba(255,255,255,.74) !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-/* contenido siempre por encima */
-.card > *{
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-/* legibilidad de controles */
-.card .segmented{ background: rgba(255,255,255,.65) !important; }
-.card .select{ background: rgba(255,255,255,.78) !important; }
-.card .btn--primary{ color:#fff !important; }
-/* ===== Más visible sin perder legibilidad ===== */
-.card::before{
-  opacity: .90 !important;   /* sube el fondo */
-}
-
-.card::after{
-  background: rgba(255,255,255,.62) !important; /* baja el “glass” */
-}
-
-
-
-
-
-
 
 
 
