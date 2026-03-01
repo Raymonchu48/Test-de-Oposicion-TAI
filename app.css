@@ -759,7 +759,7 @@ body::before{
   position:absolute;
   inset:-40px;
   pointer-events:none;
-  opacity: .55;
+  opacity: .80;
 
   background:
     /* diagonales suaves */
@@ -968,6 +968,7 @@ body::before{
 .card .segmented{ background: rgba(255,255,255,.65) !important; }
 .card .select{ background: rgba(255,255,255,.78) !important; }
 .card .btn--primary{ color:#fff !important; }
+
 
 
 
