@@ -353,10 +353,11 @@ body{
   padding:14px;
   border-radius:14px;
   border:1px solid var(--border);
-  background: var(--panel2);
+  background: inear-gradient(180deg, rgba(255,255,255,.95), rgba(238,248,251,.85));
+  box-shadow: 0 10px 22px rgba(4,53,73,.06);
 }
 
-.kpi__num{ font-size:1.6rem; font-weight:900; }
+.kpi__num{ font-size:1.6rem; font-weight:900;letter-spacing: .2px; }
 .kpi__label{ color:var(--muted); font-size:.85rem; }
 
 /* Plan */
@@ -737,6 +738,13 @@ body::before{
 .card--progress > * ,
 .card--plan > *{
   position: relative;
+}
+#motivationHint::after{
+  content:"STATUS: READY";
+  margin-left:auto;
+  font-size:.75rem;
+  font-weight:900;
+  color: rgba(4,53,73,.55);
 }
 
 
