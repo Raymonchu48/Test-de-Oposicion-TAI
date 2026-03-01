@@ -744,3 +744,9 @@ function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_D
 function getPendingMistakesCount(block = null) {
   return getPendingMistakeIds({ block }).length;
 }
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(console.error);
+  });
+}
