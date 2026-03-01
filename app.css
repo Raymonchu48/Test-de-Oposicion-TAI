@@ -699,8 +699,8 @@ body::before{
   pointer-events: none;
   opacity: .55;
   background-image:
-    linear-gradient(rgba(4,53,73,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(4,53,73,.04) 1px, transparent 1px);
+    linear-gradient(rgba(4,53,73,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(4,53,73,.03) 1px, transparent 1px);
   background-size: 44px 44px;
 }
 
@@ -746,6 +746,7 @@ body::before{
   font-weight:900;
   color: rgba(4,53,73,.55);
 }
+
 
 
 
