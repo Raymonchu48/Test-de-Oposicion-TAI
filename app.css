@@ -697,7 +697,7 @@ body::before{
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  opacity: .55;
+  opacity: .75;
   background-image:
     linear-gradient(rgba(4,53,73,.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(4,53,73,.03) 1px, transparent 1px);
@@ -968,6 +968,7 @@ body::before{
 .card .segmented{ background: rgba(255,255,255,.65) !important; }
 .card .select{ background: rgba(255,255,255,.78) !important; }
 .card .btn--primary{ color:#fff !important; }
+
 
 
 
