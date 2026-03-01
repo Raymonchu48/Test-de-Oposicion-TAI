@@ -681,6 +681,63 @@ body{
   font-weight: 900;
 }
 
+/* ===== Fondo “circuito” sutil (pro) ===== */
+body{
+  background:
+    radial-gradient(900px 520px at 12% 0%, rgba(4,151,167,.12), transparent 60%),
+    radial-gradient(900px 520px at 90% 10%, rgba(247,181,17,.10), transparent 62%),
+    linear-gradient(180deg, #ffffff 0%, #f6fbfd 55%, #ffffff 100%);
+}
+
+/* Grid técnico muy suave en el fondo */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: .55;
+  background-image:
+    linear-gradient(rgba(4,53,73,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(4,53,73,.04) 1px, transparent 1px);
+  background-size: 44px 44px;
+}
+
+/* ===== Cards destacadas: Progreso y Plan ===== */
+.card--progress,
+.card--plan{
+  position: relative;
+  overflow: hidden;
+}
+
+/* brillo/patrón dentro de cada card (muy sutil) */
+.card--progress::before,
+.card--plan::before{
+  content:"";
+  position:absolute;
+  inset:-40px -60px -40px -60px;
+  background:
+    radial-gradient(220px 160px at 15% 20%, rgba(4,151,167,.14), transparent 70%),
+    radial-gradient(260px 180px at 85% 35%, rgba(4,151,167,.10), transparent 70%),
+    linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,255,255,0));
+  opacity: .9;
+  pointer-events:none;
+}
+
+/* barra lateral para jerarquía visual */
+.card--progress{
+  border-left: 6px solid rgba(4,151,167,.55);
+}
+
+.card--plan{
+  border-left: 6px solid rgba(247,181,17,.55);
+}
+
+/* asegura que el contenido quede por encima del overlay */
+.card--progress > * ,
+.card--plan > *{
+  position: relative;
+}
 
 
 
