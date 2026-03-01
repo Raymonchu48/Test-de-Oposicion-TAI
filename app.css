@@ -747,6 +747,94 @@ body::before{
   color: rgba(4,53,73,.55);
 }
 
+/* ===== Card background estilo "cyber pastel" (sin perder legibilidad) ===== */
+.card--tech{
+  position: relative;
+  overflow: hidden;
+}
+
+/* Capa decorativa (parecida a tu ejemplo) */
+.card--tech::before{
+  content:"";
+  position:absolute;
+  inset:-40px;
+  pointer-events:none;
+  opacity: .55;
+
+  background:
+    /* diagonales suaves */
+    linear-gradient(135deg,
+      rgba(0, 180, 200, .20) 0%,
+      rgba(0, 180, 200, .20) 22%,
+      rgba(255, 120, 200, .18) 22%,
+      rgba(255, 120, 200, .18) 46%,
+      rgba(255, 255, 255, 0) 46%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+
+    /* circuitos: líneas finas */
+    repeating-linear-gradient(
+      0deg,
+      rgba(4,53,73,.08) 0px,
+      rgba(4,53,73,.08) 1px,
+      transparent 1px,
+      transparent 18px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(4,53,73,.06) 0px,
+      rgba(4,53,73,.06) 1px,
+      transparent 1px,
+      transparent 22px
+    ),
+
+    /* nodos */
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
+    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
+}
+
+/* Capa “glass” que garantiza lectura */
+.card--tech::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background: rgba(255,255,255,.70);
+  backdrop-filter: blur(10px);
+}
+
+/* El contenido siempre por encima */
+.card--tech > *{
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Asegurar legibilidad de controles dentro de cards con fondo ===== */
+.card--tech .segmented{
+  background: rgba(255,255,255,.65);
+  border: 1px solid rgba(4,53,73,.14);
+}
+
+.card--tech .select{
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(4,53,73,.18);
+}
+
+.card--tech .label,
+.card--tech .card__title{
+  color: var(--text);
+}
+
+.card--tech .hint{
+  color: rgba(4,53,73,.65);
+}
+
+/* Botón principal siempre sólido y legible */
+.card--tech .btn--primary{
+  color:#fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+}
 
 
 
