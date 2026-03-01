@@ -608,6 +608,43 @@ body{
   white-space:nowrap;
   border:0;
 }
+/* Hint motivacional integrado, estilo informática */
+.hint--motivation{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+
+  margin-top: 14px;
+  padding: 12px 14px;
+
+  border-radius: 14px;
+  border: 1px dashed rgba(4,151,167,.35);
+  background: rgba(4,151,167,.08);
+
+  color: var(--text);
+}
+
+.hint--motivation .hint__icon{
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  background: rgba(255,255,255,.75);
+  border: 1px solid rgba(4,53,73,.12);
+  flex: 0 0 auto;
+}
+
+.hint--motivation .hint__text{
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+.hint--motivation strong{
+  color: var(--text);
+}
 
 
 
