@@ -920,6 +920,54 @@ body::before{
   background: linear-gradient(135deg, var(--accent), var(--accent2));
 }
 
+/* ===== Todas las tarjetas con fondo “cyber pastel” + legibilidad ===== */
+.card{
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.card::before{
+  content:"" !important;
+  position:absolute !important;
+  inset:-40px !important;
+  pointer-events:none !important;
+  opacity: .60 !important;
+
+  background:
+    linear-gradient(135deg,
+      rgba(0, 180, 200, .22) 0%,
+      rgba(0, 180, 200, .22) 22%,
+      rgba(255, 120, 200, .20) 22%,
+      rgba(255, 120, 200, .20) 46%,
+      rgba(255, 255, 255, 0) 46%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    repeating-linear-gradient(0deg, rgba(4,53,73,.10) 0 1px, transparent 1px 18px),
+    repeating-linear-gradient(90deg, rgba(4,53,73,.08) 0 1px, transparent 1px 22px),
+    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
+    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
+    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
+}
+
+.card::after{
+  content:"" !important;
+  position:absolute !important;
+  inset:0 !important;
+  pointer-events:none !important;
+  background: rgba(255,255,255,.74) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+/* contenido siempre por encima */
+.card > *{
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* legibilidad de controles */
+.card .segmented{ background: rgba(255,255,255,.65) !important; }
+.card .select{ background: rgba(255,255,255,.78) !important; }
+.card .btn--primary{ color:#fff !important; }
 
 
 
