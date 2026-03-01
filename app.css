@@ -1147,6 +1147,28 @@ body::before{
   background: rgba(255,255,255,.10) !important;
   border-color: rgba(255,255,255,.26) !important;
 }
+/* ===== Cards más claras/translúcidas (se ve más el fondo) ===== */
+.card{
+  background: rgba(255,255,255,.10) !important;     /* antes .14 */
+  backdrop-filter: blur(22px) saturate(155%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(155%) !important;
+
+  border: 1px solid rgba(255,255,255,.28) !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.18) !important;
+}
+
+/* KPI dentro de Progreso: un pelín más opacos para leerse */
+.kpi{
+  background: rgba(255,255,255,.12) !important;
+  border: 1px solid rgba(255,255,255,.22) !important;
+}
+
+/* Plan rows: divisores visibles */
+.plan__row{
+  border-bottom-color: rgba(255,255,255,.18) !important;
+}
 
 
 
