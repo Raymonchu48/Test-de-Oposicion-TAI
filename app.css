@@ -17,7 +17,7 @@
   --r: 16px;
 
   /* Banda superior */
-  --topband-h: 400px; /* ajusta si quieres más/menos amarillo */
+  --topband-h: 300px; /* ajusta si quieres más/menos amarillo */
 }
 
 /* Reset/base */
@@ -569,6 +569,7 @@ body{
 
 .practical__actions{ display:flex; gap:10px; margin-top:8px; }
 @media (max-width: 520px){ .practical__actions{ flex-direction:column; } }
+
 
 
 
