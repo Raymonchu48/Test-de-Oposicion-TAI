@@ -619,8 +619,8 @@ body{
 
   border-radius: 14px;
   border: 1px dashed rgba(4,151,167,.35);
-  background: rgba(4,151,167,.08);
-
+  background: linear-gradient(90deg, rgba(4,151,167,.10), rgba(247,181,17,.08));
+}
   color: var(--text);
 }
 
@@ -680,6 +680,7 @@ body{
   color: var(--text);
   font-weight: 900;
 }
+
 
 
 
