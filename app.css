@@ -1387,6 +1387,22 @@ body::before{
   background: #0f3444;
   color: #fff;
 }
+/* Dropdown del select: tono glass (no negro) */
+.select option{
+  background: #2b5162;                 /* azul glass */
+  color: rgba(255,255,255,.92);
+}
+
+/* Opción seleccionada (más “premium”) */
+.select option:checked{
+  background: #356b80;                 /* un poco más claro */
+  color: rgba(255,255,255,.98);
+}
+
+/* Si el navegador soporta, refuerza el look */
+.select{
+  color-scheme: dark;
+}
 
 
 
