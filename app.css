@@ -1323,7 +1323,7 @@ body::before{
 
 /* Cards más transparentes */
 .card{
-  background: rgba(255,255,255,.07) !important;      /* antes .10/.14 */
+  background: rgba(255,255,255,.05) !important;      /* antes .10/.14 */
   border: 1px solid rgba(255,255,255,.30) !important;
   box-shadow:
     0 22px 70px rgba(0,0,0,.26),
@@ -1352,6 +1352,7 @@ body::before{
 #startBtn{
   background: rgba(4,151,167,.52) !important;
 }
+
 
 
 
