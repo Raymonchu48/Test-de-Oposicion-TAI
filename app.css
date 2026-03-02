@@ -1251,6 +1251,71 @@ body::before{
   color: rgba(255, 70, 70, .85) !important;
   text-shadow: 0 0 14px rgba(255, 70, 70, .20) !important;
 }
+/* ==========================
+   TUNING: rojo neón premium + legibilidad
+   ========================== */
+
+/* Rojo más “banner” (menos naranja) */
+:root{
+  --neon-red: rgba(255, 60, 90, 1);
+  --neon-red-soft: rgba(255, 80, 110, .85);
+  --neon-glow: rgba(255, 60, 90, .45);
+}
+
+/* Títulos: rojo + glow elegante */
+.card__title{
+  color: var(--neon-red) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.20),
+    0 0 10px rgba(255, 60, 90, .28),
+    0 0 22px var(--neon-glow) !important;
+}
+
+/* Labels (Preguntas/Temporizador/etc.) un poco más “soft” */
+.label{
+  color: var(--neon-red-soft) !important;
+  text-shadow:
+    0 0 10px rgba(255, 60, 90, .18),
+    0 8px 18px rgba(0,0,0,.16) !important;
+}
+
+/* KPI números: rojo con glow, pero súper legible */
+.kpi__num{
+  color: var(--neon-red) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.22),
+    0 0 18px rgba(255, 60, 90, .30),
+    0 0 30px rgba(255, 60, 90, .20) !important;
+}
+
+/* Texto normal: blanco limpio, no gris */
+.card,
+.kpi__label,
+.plan__row span,
+.hint,
+.hint--motivation .hint__text{
+  color: rgba(255,255,255,.88) !important;
+  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+}
+
+/* Valores del plan (derecha): rojo más fuerte */
+.plan__row strong{
+  color: var(--neon-red) !important;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.20),
+    0 0 14px rgba(255, 60, 90, .26) !important;
+}
+
+/* Separadores del plan más visibles */
+.plan__row{
+  border-bottom-color: rgba(255,255,255,.18) !important;
+}
+
+/* “STATUS: READY” rojo premium */
+#motivationHint::after{
+  color: var(--neon-red-soft) !important;
+  text-shadow: 0 0 14px rgba(255, 60, 90, .22) !important;
+}
 
 
 
