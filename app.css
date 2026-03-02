@@ -1353,6 +1353,40 @@ body::before{
   background: rgba(4,151,167,.52) !important;
 }
 
+/* ==========================
+   SELECT glass: menos blanco + texto más fuerte
+   ========================== */
+
+/* Campo cerrado */
+.select{
+  background: rgba(0,0,0,.18) !important;          /* baja el blanco */
+  border: 1px solid rgba(255,255,255,.26) !important;
+  color: rgba(255,255,255,.92) !important;         /* letras fuertes */
+  font-weight: 800 !important;
+  text-shadow: 0 6px 16px rgba(0,0,0,.22) !important;
+}
+
+/* Placeholder del select (opción vacía) */
+.select option{
+  color: #0b1f2a;
+}
+
+/* Dropdown abierto (Chrome/Edge suelen respetar esto) */
+.select{
+  color-scheme: dark; /* fuerza UI oscura en controles nativos cuando es posible */
+}
+
+/* Opciones del desplegable: oscuro + texto claro */
+.select option{
+  background: #0c1f2a;         /* oscuro */
+  color: rgba(255,255,255,.92);
+}
+
+/* Hover/selected (algunos navegadores lo ignoran, pero no molesta) */
+.select option:checked{
+  background: #0f3444;
+  color: #fff;
+}
 
 
 
