@@ -1314,7 +1314,7 @@ body::before{
 /* “STATUS: READY” rojo premium */
 #motivationHint::after{
   color: var(--neon-red-soft) !important;
-  text-shadow: 0 0 14px rgba(255, 60, 90, .22) !important;
+  text-shadow: 0 0 14px rgba(255, 60, 90, .18) !important;
 }
 
 /* ==========================
@@ -1340,18 +1340,19 @@ body::before{
 .kpi,
 .hint--motivation{
   background: rgba(255,255,255,.02) !important;
-  border-color: rgba(255,255,255,.22) !important;
+  border-color: rgba(255,255,255,.10) !important;
 }
 
 /* Inputs: un pelín más sólidos para que se lean */
 .select{
-  background: rgba(255,255,255,.08) !important;
+  background: rgba(255,255,255,.10) !important;
 }
 
 /* Botón “Empezar” mantiene presencia */
 #startBtn{
   background: rgba(4,151,167,.52) !important;
 }
+
 
 
 
