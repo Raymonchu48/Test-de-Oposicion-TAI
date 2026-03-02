@@ -750,3 +750,106 @@ if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(console.error);
   });
 }
+/* ==========================
+   Coach inline (local)
+   ========================== */
+const COACH_STORE = "opostudy_coach_chat_v1";
+
+function loadCoachChat(){
+  try { return JSON.parse(localStorage.getItem(COACH_STORE) || "[]"); }
+  catch { return []; }
+}
+
+function saveCoachChat(list){
+  localStorage.setItem(COACH_STORE, JSON.stringify(list));
+}
+
+function coachReply(text){
+  const t = (text || "").toLowerCase();
+
+  if (t.includes("fallos") || t.includes("repaso")) {
+    return "Repaso rápido: entra en “Repaso de fallos”, haz 10–15 preguntas y apunta por qué fallaste (concepto, trampa, prisa).";
+  }
+  if (t.includes("plan")) {
+    return "Plan recomendado: 15 preguntas/día + 5 de repaso de fallos. Alterna bloques (1→2→3→4) y cada 7 días haz un examen completo.";
+  }
+  if (t.includes("bloque 1")) return "Bloque 1: Constitución, organización del Estado, procedimiento, transparencia, eIDAS/administración electrónica. Prioriza artículos clave y definiciones.";
+  if (t.includes("bloque 2")) return "Bloque 2: hardware, SO, redes básicas, bases de datos, seguridad básica. Ideal para subir nota rápida con práctica.";
+  if (t.includes("bloque 3")) return "Bloque 3: desarrollo, BD, UML, POO, APIs. Enfócate en conceptos + ejemplos.";
+  if (t.includes("bloque 4")) return "Bloque 4: redes, TCP/IP, servicios, DNS, VPN, seguridad perimetral. Practica preguntas tipo protocolo/puerto.";
+  if (t.includes("tiempo") || t.includes("temporizador")) {
+    return "Si vas justo: desactiva temporizador en práctica y actívalo en examen. Meta: 60–75s por pregunta con revisión posterior.";
+  }
+  if (t.includes("estrategia") || t.includes("nota")) {
+    return "Estrategia: primero precisión (70%+), luego velocidad. Guarda fallos, repite hasta que caigan a 0 pendientes.";
+  }
+
+  return "Dime qué necesitas: “fallos”, “plan”, “bloque 1/2/3/4” o “tiempo”.";
+}
+
+function renderCoach(){
+  const log = document.getElementById("coachLog");
+  if (!log) return;
+
+  const chat = loadCoachChat();
+  log.innerHTML = "";
+
+  for (const m of chat){
+    const row = document.createElement("div");
+    row.className = "coach__msg " + (m.role === "me" ? "coach__msg--me" : "coach__msg--bot");
+
+    const bubble = document.createElement("div");
+    bubble.className = "coach__bubble";
+    bubble.textContent = m.text;
+
+    row.appendChild(bubble);
+    log.appendChild(row);
+  }
+
+  log.scrollTop = log.scrollHeight;
+}
+
+function pushCoach(role, text){
+  const chat = loadCoachChat();
+  chat.push({ role, text, ts: Date.now() });
+  // limita historial
+  if (chat.length > 120) chat.splice(0, chat.length - 120);
+  saveCoachChat(chat);
+  renderCoach();
+}
+
+function setupCoach(){
+  const input = document.getElementById("coachInput");
+  const send = document.getElementById("coachSend");
+  const clear = document.getElementById("coachClear");
+
+  if (!input || !send || !clear) return;
+
+  renderCoach();
+
+  const doSend = () => {
+    const txt = (input.value || "").trim();
+    if (!txt) return;
+    input.value = "";
+    pushCoach("me", txt);
+
+    const r = coachReply(txt);
+    setTimeout(() => pushCoach("bot", r), 180);
+  };
+
+  send.addEventListener("click", doSend);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doSend();
+  });
+  clear.addEventListener("click", () => {
+    localStorage.removeItem(COACH_STORE);
+    renderCoach();
+  });
+
+  // mensaje inicial si está vacío
+  if (loadCoachChat().length === 0){
+    pushCoach("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
+  }
+}
+
+setupCoach();
