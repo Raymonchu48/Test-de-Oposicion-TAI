@@ -1317,6 +1317,41 @@ body::before{
   text-shadow: 0 0 14px rgba(255, 60, 90, .22) !important;
 }
 
+/* ==========================
+   GLASS más transparente (como tu referencia)
+   ========================== */
+
+/* Cards más transparentes */
+.card{
+  background: rgba(255,255,255,.07) !important;      /* antes .10/.14 */
+  border: 1px solid rgba(255,255,255,.30) !important;
+  box-shadow:
+    0 22px 70px rgba(0,0,0,.26),
+    inset 0 1px 0 rgba(255,255,255,.18) !important;
+
+  backdrop-filter: blur(26px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(170%) !important;
+}
+
+/* Controles también glass */
+.segmented,
+.select,
+.switch,
+.kpi,
+.hint--motivation{
+  background: rgba(255,255,255,.06) !important;
+  border-color: rgba(255,255,255,.22) !important;
+}
+
+/* Inputs: un pelín más sólidos para que se lean */
+.select{
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* Botón “Empezar” mantiene presencia */
+#startBtn{
+  background: rgba(4,151,167,.52) !important;
+}
 
 
 
