@@ -1555,6 +1555,67 @@ body::before{
 .segmented{
   border-color: rgba(255,255,255,.24) !important;
 }
+/* ==========================
+   FIX Windows (hueco) + FIX iOS (negro/blur)
+   Pegar al FINAL del app.css
+   ========================== */
+
+/* 1) Windows/Desktop: evita que Grid estire las cards (quita el hueco) */
+.layout{
+  align-items: start;              /* clave */
+}
+.layout > .card,
+.layout > aside{
+  align-self: start;               /* asegura */
+}
+
+/* 2) Texto del hint siempre legible (en iPhone te quedaba oscuro) */
+.hint--motivation .hint__text{
+  color: rgba(255,255,255,.88) !important;
+  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+}
+
+/* 3) iOS/Safari: cuando el blur falla o se degrada, subimos opacidad del glass
+      y añadimos un “velo” interno para evitar el fondo negro */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .card, .segmented, .select, .switch, .kpi, .hint--motivation{
+    background: rgba(18, 70, 90, .55) !important;   /* glass azul, nada de negro */
+    border-color: rgba(255,255,255,.22) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  .card{
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    background: linear-gradient(
+      180deg,
+      rgba(255,255,255,.10) 0%,
+      rgba(255,255,255,.04) 100%
+    );
+  }
+
+  .card > *{
+    position: relative;
+    z-index: 1;
+  }
+}
+
+/* 4) iPhone/iPad (extra): si Safari decide “reducir transparencias”, fuerza legibilidad */
+@media (prefers-reduced-transparency: reduce){
+  .card, .segmented, .select, .switch, .kpi, .hint--motivation{
+    background: rgba(18, 70, 90, .60) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
 
 
 
