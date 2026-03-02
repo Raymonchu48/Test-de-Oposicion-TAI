@@ -1403,6 +1403,33 @@ body::before{
 .select{
   color-scheme: dark;
 }
+/* ==========================
+   Switch: cambio de color visible al activar
+   ========================== */
+
+/* OFF */
+.switch__ui{
+  background: rgba(255,255,255,.10) !important;
+  border: 1px solid rgba(255,255,255,.26) !important;
+}
+
+/* ON: barra turquesa bien visible */
+.switch input:checked + .switch__ui{
+  background: rgba(4,151,167,.55) !important;
+  border-color: rgba(4,151,167,.55) !important;
+  box-shadow: 0 0 18px rgba(4,151,167,.22) !important;
+}
+
+/* Bolita */
+.switch__ui::after{
+  background: rgba(255,255,255,.95) !important;
+}
+
+/* Texto "Activado" un poco más brillante */
+.switch input:checked ~ .switch__text{
+  color: rgba(255,255,255,.92) !important;
+  text-shadow: 0 0 12px rgba(255,60,90,.18) !important;
+}
 
 
 
