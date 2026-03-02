@@ -1483,6 +1483,54 @@ body::before{
   font-weight: 900 !important;
   text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
 }
+/* ==========================
+   Unificar fondos de controles: glass oscuro (sin blanco)
+   ========================== */
+
+/* Base glass para TODOS los controles */
+.segmented,
+.select,
+.switch{
+  background: rgba(255,255,255,.06) !important;   /* igual que el temporizador */
+  border: 1px solid rgba(255,255,255,.22) !important;
+  backdrop-filter: blur(22px) saturate(165%) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(165%) !important;
+}
+
+/* Tabs container un poco más marcado */
+.segmented{
+  background: rgba(255,255,255,.08) !important;
+}
+
+/* Botones del segmented (no “bloques blancos”) */
+.segmented__btn{
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.segmented__btn.is-active{
+  background: rgba(255,255,255,.14) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.26) !important;
+}
+
+/* Selects: quita el blanco “de input” */
+.select{
+  background: rgba(255,255,255,.07) !important;
+  color: rgba(255,255,255,.92) !important;
+}
+
+/* Preguntas (select pequeño) y Bloque: mismo look */
+#countSelect.select,
+#blockSelect.select{
+  background: rgba(255,255,255,.07) !important;
+}
+
+/* Si algún estilo anterior mete blanco, lo machacamos */
+.select,
+.segmented,
+.switch{
+  box-shadow: none !important;
+}
 
 
 
