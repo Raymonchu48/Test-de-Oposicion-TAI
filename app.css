@@ -1329,8 +1329,8 @@ body::before{
     0 22px 70px rgba(0,0,0,.02),
     inset 0 1px 0 rgba(255,255,255,.01) !important;
 
-  backdrop-filter: blur(16px) saturate(100%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(170%) !important;
+  backdrop-filter: blur(10px) saturate(50%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(100%) !important;
 }
 
 /* Controles también glass */
@@ -1352,6 +1352,7 @@ body::before{
 #startBtn{
   background: rgba(4,151,167,.52) !important;
 }
+
 
 
 
