@@ -1,26 +1,28 @@
 /* =========================
-   OpoStudy · app.css (clean)
+   OpoStudy · app.css (clean + frosted glass + neon)
    ========================= */
 
-/* Variables */
+/* ---------- Variables ---------- */
 :root{
-  --bg: #ffffff;
-  --panel: #f7fbfc;
-  --panel2:#eef8fb;
-  --text: #043549;
-  --muted:#45636d;
-  --border: rgba(4,53,73,.14);
-  --accent:#0497a7;
-  --accent2:#057f8c;
-  --highlight:#f7b511;
-  --shadow:0 10px 30px rgba(4,53,73,.12);
-  --r: 16px;
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.74);
 
-  /* Banda superior */
-  --topband-h: 0px; /* ajusta si quieres más/menos amarillo */
+  --accent: #0497a7;      /* turquesa */
+  --accent2:#057f8c;
+
+  --neon: rgba(255,60,90,1);       /* rojo premium */
+  --neonSoft: rgba(255,80,110,.85);
+  --neonGlow: rgba(255,60,90,.45);
+
+  --glass: rgba(255,255,255,.08);
+  --glass2: rgba(255,255,255,.06);
+  --border: rgba(255,255,255,.22);
+
+  --shadow: 0 22px 70px rgba(0,0,0,.28);
+  --r: 16px;
 }
 
-/* Reset/base */
+/* ---------- Reset/Base ---------- */
 *{ box-sizing:border-box; }
 html,body{ height:100%; }
 
@@ -28,552 +30,37 @@ body{
   margin:0;
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
   color: var(--text);
-  background: var(--bg);
+
+  /* Fondo datacenter */
+  background: url("./bg-datacenter.webp") center/cover no-repeat fixed;
+  background-color:#061a24;
+}
+
+/* iOS: evita “saltos” con fixed */
+@supports (-webkit-touch-callout: none){
+  body{ background-attachment: scroll; }
+}
+
+/* Velo global para legibilidad */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events:none;
+  background: linear-gradient(
+    180deg,
+    rgba(0, 30, 45, .28) 0%,
+    rgba(0, 30, 45, .18) 55%,
+    rgba(0, 30, 45, .24) 100%
+  );
 }
 
 .no-scroll{ overflow:hidden; }
 
-/* Layout */
-.layout{
-  position: relative;
-  max-width:1100px;
-  margin:0 auto;
-  padding: 22px 20px 36px;
-  display:grid;
-  gap:18px;
-  grid-template-columns: 1.2fr .8fr;
-}
-
-@media (max-width: 900px){
-  .layout{ grid-template-columns:1fr; }
-}
-
-.stack{ display:flex; flex-direction:column; gap:18px; }
-
-/* Banda superior controlada */
-.layout::before{
-  content:"";
-  position:absolute;
-  left:50%;
-  transform: translateX(-50%);
-  top:-18px;
-  width:100vw;
-  height: var(--topband-h);
-  z-index:-1;
-  background:
-    radial-gradient(900px 520px at 18% -10%, rgba(247,181,17,.38), transparent 60%),
-    radial-gradient(900px 520px at 90% 0%, rgba(4,151,167,.18), transparent 62%),
-    linear-gradient(180deg, #fff6dc 0%, #ffffff 70%);
-}
-
-/* ===== Header con banner + texto legible "fusionado" ===== */
-
-.topbar{
-  position: sticky;
-  top: 0;
-  z-index: 10;
-
-  /* banner */
-  background-image: url("./header-banner.webp");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  border-bottom: 1px solid rgba(4,53,73,.14);
-}
-
-/* Capa overlay para que el texto se lea */
-.topbar::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:
-    linear-gradient(90deg, rgba(0,0,0,.42) 0%, rgba(0,0,0,.18) 45%, rgba(0,0,0,.05) 100%);
-  pointer-events:none;
-}
-
-/* asegura que el contenido vaya por encima del overlay */
-.topbar__inner{
-  position: relative;
-  max-width: 1100px;
-  margin: 0 auto;
-  padding: 18px 20px;
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-}
-
-/* Bloque de marca con efecto "glass" */
-.brand{
-  display:flex;
-  align-items:center;
-  gap:12px;
-
-  padding: 10px 12px;
-  border-radius: 18px;
-
-  background: rgba(246, 243, 215, .55);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 10px 24px rgba(0,0,0,.18);
-  border: 1px solid rgba(255,255,255,.22);
-}
-
-/* El logo cuadrado que ya tienes */
-.brand__logo{
-  width:40px;
-  height:40px;
-  border-radius:12px;
-  object-fit: cover;
-  display:block;
-  box-shadow: 0 10px 22px rgba(0,0,0,.18);
-}
-
-/* Texto: que "funda" con el banner pero se lea */
-.brand__name{
-  font-family: "Fredoka", Inter, system-ui, sans-serif;
-  font-weight: 800;
-  font-size: 2.05rem;
-  line-height: 1;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-
-  color: #2e8b57;
-  text-shadow:
-    0 3px 0 rgba(0,0,0,.18),
-    0 10px 22px rgba(0,0,0,.18);
-}
-
-.brand__sub{
-  margin-top: 4px;
-  font-family: "Fredoka", Inter, system-ui, sans-serif;
-  font-weight: 700;
-  font-size: 1.05rem;
-
-  color: #2e8b57;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.14),
-    0 10px 22px rgba(0,0,0,.14);
-}
-/* Cards */
-.card{
-  background: linear-gradient(180deg, var(--panel), #ffffff);
-  border:1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: var(--shadow);
-  padding: 22px;
-}
-
-.card__title{
-  margin: 0 0 16px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid rgba(4,53,73,.12);
-}
-
-/* Fields */
-.field{ margin-bottom: 18px; }
-
-.label{
-  display:block;
-  margin-bottom: 10px;
-  font-weight: 700;
-  color: var(--text);
-}
-
-.hint{
-  margin-top: 10px;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
-/* Segmented */
-.segmented{
-  display:flex;
-  gap:8px;
-  background: var(--panel2);
-  border:1px solid var(--border);
-  padding:6px;
-  border-radius:14px;
-}
-
-.segmented__btn{
-  flex:1;
-  padding:10px 10px;
-  border-radius:12px;
-  border:0;
-  cursor:pointer;
-  background: transparent;
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.segmented__btn.is-active{
-  background: rgba(4,151,167,.14);
-  color: var(--text);
-  box-shadow: inset 0 0 0 1px rgba(4,151,167,.30);
-}
-
-/* Select */
-.select{
-  width:100%;
-  min-height: 46px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  font-size: 1rem;
-  background: var(--panel2);
-  border: 1px solid rgba(4,53,73,.18);
-  color: var(--text);
-  outline:none;
-}
-
-.select:focus{
-  border-color: rgba(4,151,167,.55);
-  box-shadow: 0 0 0 4px rgba(4,151,167,.18);
-}
-
-.grid2{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-top: 6px;
-}
-
-@media (max-width: 520px){
-  .grid2{ grid-template-columns: 1fr; }
-}
-
-/* Buttons */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  border-radius: 14px;
-  border:1px solid transparent;
-  font-weight: 800;
-  cursor:pointer;
-}
-
-.btn--primary{
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color:#fff;
-}
-
-.btn--primary:hover{
-  filter: brightness(.98);
-  box-shadow: 0 12px 26px rgba(4,151,167,.22);
-}
-
-.btn--ghost{
-  background: rgba(250,252,250,.70);
-  border:1px solid var(--border);
-  color: var(--text);
-}
-
-.btn--small{ padding:10px 12px; }
-
-/* CTA Start */
-#startBtn{
-  width:100%;
-  min-height: 58px;
-  margin-top: 16px;
-  padding: 18px 18px;
-  border: 0;
-  border-radius: 16px;
-  font-size: 1.20rem;
-  font-weight: 900;
-  letter-spacing: .2px;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color:#fff;
-  box-shadow: 0 14px 28px rgba(4,151,167,.22);
-}
-
-#startBtn:disabled{
-  opacity: 1;
-  cursor: not-allowed;
-  background: linear-gradient(135deg, rgba(4,151,167,.45), rgba(5,127,140,.45));
-  box-shadow: none;
-}
-
-/* Switch */
-.switch{
-  display:flex;
-  gap: 12px;
-  align-items:center;
-  padding: 10px 12px;
-  border-radius: 14px;
-  background: var(--panel2);
-  border: 1px solid rgba(4,53,73,.12);
-}
-
-.switch input{ display:none; }
-
-.switch__ui{
-  width:48px;
-  height:28px;
-  border-radius:999px;
-  background: rgba(255,255,255,.55);
-  border:1px solid var(--border);
-  position:relative;
-}
-
-.switch__ui::after{
-  content:"";
-  position:absolute;
-  top:3px;
-  left:3px;
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  background:#fff;
-  transition: transform .18s ease;
-}
-
-.switch input:checked + .switch__ui{
-  background: rgba(4,151,167,.45);
-  border-color: rgba(4,151,167,.45);
-}
-
-.switch input:checked + .switch__ui::after{
-  transform: translateX(20px);
-}
-
-.switch__text{
-  font-weight: 800;
-  color: var(--text);
-}
-
-/* KPIs */
-.kpi-grid{
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:12px;
-}
-
-.kpi{
-  padding:14px;
-  border-radius:14px;
-  border:1px solid var(--border);
-  background: inear-gradient(180deg, rgba(255,255,255,.95), rgba(238,248,251,.85));
-  box-shadow: 0 10px 22px rgba(4,53,73,.06);
-}
-
-.kpi__num{ font-size:1.6rem; font-weight:900;letter-spacing: .2px; }
-.kpi__label{ color:var(--muted); font-size:.85rem; }
-
-/* Plan */
-.plan__row{
-  display:flex;
-  justify-content:space-between;
-  padding:10px 0;
-  border-bottom:1px solid var(--border);
-}
-.plan__row:last-child{ border-bottom:0; }
-.plan__row span{ color:var(--muted); }
-
-/* Hero */
-.hero-card{ padding: 12px; }
-
-.hero-img{
-  width:100%;
-  height:260px;
-  display:block;
-  object-fit: cover;
-  border-radius: 16px;
-  border:1px solid rgba(4,53,73,.14);
-  background:#fff;
-}
-
-/* Modal */
-.modal{
-  position: fixed;
-  inset:0;
-  display:none;
-  z-index:50;
-}
-.modal.is-open{ display:block; }
-
-.modal__backdrop{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,.55);
-}
-
-.modal__panel{
-  position: relative;
-  max-width: 900px;
-  margin: 24px auto;
-  padding: 0 16px;
-}
-
-.quiz{
-  background: rgba(250,252,250,.98);
-  border:1px solid var(--border);
-  border-radius: var(--r);
-  box-shadow: 0 20px 60px rgba(4,53,73,.25);
-  overflow:hidden;
-}
-
-.quiz__top{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:16px 18px;
-  border-bottom:1px solid var(--border);
-}
-
-.quiz__title{ font-weight:900; }
-.quiz__sub{ color: var(--muted); font-size:.9rem; margin-top:2px; }
-
-.quiz__right{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-
-.quiz__timer{
-  font-variant-numeric: tabular-nums;
-  padding:8px 10px;
-  border:1px solid var(--border);
-  border-radius:12px;
-  background: rgba(255,255,255,.70);
-}
-
-.quiz__progress{ padding: 0 18px 14px; }
-
-.quiz__bar{
-  height:8px;
-  background: rgba(4,53,73,.08);
-  border-radius: 999px;
-  overflow:hidden;
-}
-
-.quiz__barFill{
-  height:100%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  width:0%;
-  transition: width .2s ease;
-}
-
-.quiz__body{ padding: 18px; }
-
-.quiz__q{
-  font-size: 1.05rem;
-  line-height: 1.6;
-  margin-bottom: 14px;
-}
-
-.quiz__opts{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-
-.opt{
-  width:100%;
-  text-align:left;
-  background: var(--panel2);
-  border:1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px 14px;
-  cursor:pointer;
-  display:flex;
-  gap:12px;
-  align-items:flex-start;
-}
-
-.opt:hover{
-  border-color: rgba(4,151,167,.45);
-  background: rgba(4,151,167,.10);
-}
-
-.opt__key{
-  min-width:34px;
-  height:34px;
-  border-radius: 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background: rgba(255,255,255,.75);
-  border:1px solid var(--border);
-  font-weight:900;
-}
-
-.opt__text{ color: var(--text); line-height:1.5; }
-
-.opt.is-selected{
-  border-color: rgba(4,151,167,.65);
-  background: rgba(4,151,167,.12);
-}
-
-.opt.is-correct{
-  border-color: rgba(76,201,240,.70);
-  background: rgba(76,201,240,.14);
-}
-
-.opt.is-wrong{
-  border-color: rgba(247,37,133,.55);
-  background: rgba(247,37,133,.10);
-}
-
-.quiz__explain{
-  margin-top: 12px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border:1px solid var(--border);
-  background: rgba(255,255,255,.75);
-  color: var(--muted);
-}
-
-.quiz__footer{
-  display:flex;
-  gap:10px;
-  padding: 16px 18px;
-  border-top:1px solid var(--border);
-}
-
-.res{ padding: 26px 18px; text-align:center; }
-.res__score{ font-size: 3rem; font-weight: 900; letter-spacing: .5px; }
-.res__line{ color: var(--muted); margin-top: 8px; }
-.res__actions{ display:flex; gap:10px; justify-content:center; margin-top:16px; }
-
-@media (max-width: 520px){
-  .res__actions{ flex-direction:column; }
-}
-
-/* Practical */
-.textarea{
-  width:100%;
-  border-radius:14px;
-  padding:12px 14px;
-  border:1px solid rgba(4,53,73,.18);
-  background: var(--panel2);
-  font-size:1rem;
-  color: var(--text);
-  outline:none;
-}
-
-.textarea:focus{
-  border-color: rgba(4,151,167,.55);
-  box-shadow: 0 0 0 4px rgba(4,151,167,.18);
-}
-
-.practical{ display:flex; flex-direction:column; gap:12px; }
-
-.practical__prompt,
-.practical__deliverable,
-.practical__solution{
-  padding:12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(4,53,73,.12);
-  background: var(--panel);
-}
-
-.practical__actions{ display:flex; gap:10px; margin-top:8px; }
-@media (max-width: 520px){ .practical__actions{ flex-direction:column; } }
-
-/* Header = banner (exactamente como la imagen) */
+/* ---------- Header banner ---------- */
 .topbar--banner{
-  position: sticky; /* si NO lo quieres fijo, cambia a position: relative; */
+  position: sticky;
   top: 0;
   z-index: 10;
   padding: 0;
@@ -583,21 +70,21 @@ body{
 
 .topbar__banner{
   width: 100%;
-  height: auto;      /* mantiene proporción: NO recorta */
+  height: auto;
   display: block;
 }
 
 .topbar__install{
-  position: absolute;
+  position:absolute;
   top: 14px;
   right: 18px;
   z-index: 2;
   background: rgba(255,255,255,.78);
   border: 1px solid rgba(0,0,0,.12);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-/* Accesibilidad/SEO: título oculto */
 .sr-only{
   position:absolute;
   width:1px;
@@ -609,44 +96,268 @@ body{
   white-space:nowrap;
   border:0;
 }
-/* Hint motivacional integrado, estilo informática */
-.hint--motivation{
-  display:flex;
-  gap:10px;
-  align-items:flex-start;
 
-  margin-top: 14px;
+/* ---------- Layout ---------- */
+.layout{
+  position: relative;
+  max-width:1100px;
+  margin:0 auto;
+  padding: 22px 20px 36px;
+  display:grid;
+  gap:18px;
+  grid-template-columns: 1.2fr .8fr;
+
+  align-items: start;   /* evita “huecos” en Windows */
+}
+
+@media (max-width: 900px){
+  .layout{ grid-template-columns:1fr; }
+}
+
+.stack{ display:flex; flex-direction:column; gap:18px; }
+
+/* ---------- Cards (Frosted Glass) ---------- */
+.card{
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--r);
+  border: 1px solid var(--border);
+  background: var(--glass);
+  box-shadow: var(--shadow);
+  padding: 22px;
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+/* borde interior */
+.card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius: var(--r);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.18);
+  opacity: .9;
+}
+
+/* contenido sobre overlay */
+.card > *{ position: relative; z-index: 1; }
+
+.card__title{
+  margin: 0 0 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.18);
+
+  color: var(--neon);
+  font-weight: 950;
+  text-shadow:
+    0 1px 0 rgba(0,0,0,.20),
+    0 0 10px rgba(255, 60, 90, .28),
+    0 0 22px var(--neonGlow);
+}
+
+/* ---------- Fields ---------- */
+.field{ margin-bottom: 18px; }
+
+.label{
+  display:block;
+  margin-bottom: 10px;
+  font-weight: 950;
+  color: var(--neonSoft);
+  text-shadow: 0 0 12px rgba(255,60,90,.18);
+}
+
+.hint{
+  margin-top: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+  text-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+/* ---------- Segmented (tabs) ---------- */
+.segmented{
+  display:flex;
+  gap:8px;
+  padding:6px;
+  border-radius:14px;
+
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.18);
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+
+.segmented__btn{
+  flex:1;
+  padding:10px 10px;
+  border-radius:12px;
+  border:0;
+  cursor:pointer;
+  background: transparent;
+
+  color: rgba(4,151,167,.92); /* turquesa como Empezar */
+  font-weight: 950;
+  text-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+.segmented__btn.is-active{
+  background: rgba(4,151,167,.14);
+  color: rgba(4,151,167,1);
+  box-shadow:
+    inset 0 0 0 1px rgba(4,151,167,.35),
+    0 0 18px rgba(4,151,167,.18);
+}
+
+/* ---------- Select ---------- */
+.select{
+  width:100%;
+  min-height: 46px;
   padding: 12px 14px;
-
   border-radius: 14px;
-  border: 1px dashed rgba(4,151,167,.35);
-  background: linear-gradient(90deg, rgba(4,151,167,.10), rgba(247,181,17,.08));
-}
-  color: var(--text);
+  font-size: 1rem;
+  outline:none;
+
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.22);
+  color: rgba(255,255,255,.92);
+  font-weight: 900;
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
-.hint--motivation .hint__icon{
-  width: 34px;
-  height: 34px;
-  border-radius: 12px;
-  display:flex;
+.select:focus{
+  border-color: rgba(255, 60, 90, .35);
+  box-shadow: 0 0 0 4px rgba(255, 60, 90, .16);
+}
+
+/* Dropdown (no 100% consistente en iOS, pero armoniza en desktop) */
+.select{ color-scheme: dark; }
+.select option{
+  background: #2f6075;                 /* glass azul */
+  color: rgba(255,255,255,.94);
+}
+.select option:checked{
+  background: #3a728a;
+  color: #fff;
+}
+
+/* ---------- Grid2 ---------- */
+.grid2{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 6px;
+}
+@media (max-width: 520px){
+  .grid2{ grid-template-columns: 1fr; }
+}
+
+/* ---------- Buttons ---------- */
+.btn{
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(4,53,73,.12);
-  flex: 0 0 auto;
+  gap:8px;
+  border-radius: 14px;
+  border:1px solid transparent;
+  font-weight: 900;
+  cursor:pointer;
 }
 
-.hint--motivation .hint__text{
-  line-height: 1.35;
-  color: var(--muted);
+.btn--primary{
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  color:#fff;
+}
+.btn--primary:hover{
+  filter: brightness(.98);
+  box-shadow: 0 12px 26px rgba(4,151,167,.22);
 }
 
-.hint--motivation strong{
-  color: var(--text);
+.btn--ghost{
+  background: rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.18);
+  color: rgba(255,255,255,.90);
 }
-/* Hint pro con avatar */
+.btn--small{ padding:10px 12px; }
+
+/* CTA Start */
+#startBtn{
+  width:100%;
+  min-height: 58px;
+  margin-top: 16px;
+  padding: 18px 18px;
+  border: 0;
+  border-radius: 16px;
+  font-size: 1.20rem;
+  font-weight: 950;
+  letter-spacing: .2px;
+
+  background: rgba(4,151,167,.52);
+  color:#fff;
+  box-shadow: 0 18px 40px rgba(0,0,0,.22);
+}
+
+#startBtn:disabled{
+  opacity: 1;
+  cursor: not-allowed;
+  background: rgba(4,151,167,.26);
+  box-shadow: none;
+}
+
+/* ---------- Switch ---------- */
+.switch{
+  display:flex;
+  gap: 12px;
+  align-items:center;
+  padding: 10px 12px;
+  border-radius: 14px;
+
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.18);
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+.switch input{ display:none; }
+
+.switch__ui{
+  width:48px;
+  height:28px;
+  border-radius:999px;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.22);
+  position:relative;
+}
+
+.switch__ui::after{
+  content:"";
+  position:absolute;
+  top:3px; left:3px;
+  width:22px; height:22px;
+  border-radius:50%;
+  background: rgba(255,255,255,.95);
+  transition: transform .18s ease;
+}
+
+.switch input:checked + .switch__ui{
+  background: rgba(4,151,167,.55);
+  border-color: rgba(4,151,167,.55);
+  box-shadow: 0 0 18px rgba(4,151,167,.22);
+}
+.switch input:checked + .switch__ui::after{
+  transform: translateX(20px);
+}
+
+.switch__text{
+  font-weight: 950;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 10px 22px rgba(0,0,0,.18);
+}
+
+/* ---------- Motivation hint ---------- */
 .hint--motivation{
   display:flex;
   gap:12px;
@@ -656,1082 +367,112 @@ body{
   padding: 12px 14px;
 
   border-radius: 14px;
-  border: 1px solid rgba(4,151,167,.22);
-  background: rgba(4,151,167,.06);
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.07);
+
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .hint__avatar{
   width: 42px;
   height: 42px;
-  border-radius: 14px;            /* cuadrado redondeado (pro) */
+  border-radius: 14px;
   object-fit: cover;
-  background: rgba(255,255,255,.85);
-  border: 1px solid rgba(4,53,73,.14);
+  border: 1px solid rgba(255,255,255,.18);
   box-shadow: 0 10px 22px rgba(0,0,0,.12);
   flex: 0 0 auto;
 }
 
 .hint--motivation .hint__text{
   line-height: 1.35;
-  color: var(--muted);
-  font-weight: 600;
+  color: rgba(255,255,255,.88);
+  font-weight: 700;
 }
 
-.hint--motivation .hint__text strong{
-  color: var(--text);
-  font-weight: 900;
-}
-
-/* ===== Fondo “circuito” sutil (pro) ===== */
-body{
-  background:
-    radial-gradient(900px 520px at 12% 0%, rgba(4,151,167,.12), transparent 60%),
-    radial-gradient(900px 520px at 90% 10%, rgba(247,181,17,.10), transparent 62%),
-    linear-gradient(180deg, #ffffff 0%, #f6fbfd 55%, #ffffff 100%);
-}
-
-/* Grid técnico muy suave en el fondo */
-body::before{
-  content:"";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  opacity: .50;
-  background-image:
-    linear-gradient(rgba(4,53,73,.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(4,53,73,.03) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-
-/* ===== Cards destacadas: Progreso y Plan ===== */
-.card--progress,
-.card--plan{
-  position: relative;
-  overflow: hidden;
-}
-
-/* brillo/patrón dentro de cada card (muy sutil) */
-.card--progress::before,
-.card--plan::before{
-  content:"";
-  position:absolute;
-  inset:-40px -60px -40px -60px;
-  background:
-    radial-gradient(220px 160px at 15% 20%, rgba(4,151,167,.16), transparent 70%),
-    radial-gradient(260px 180px at 85% 35%, rgba(4,151,167,.12), transparent 70%),
-    linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,255,255,0));
-  opacity: .9;
-  pointer-events:none;
-}
-
-/* barra lateral para jerarquía visual */
-.card--progress{
-  border-left: 6px solid rgba(4,151,167,.55);
-}
-
-.card--plan{
-  border-left: 6px solid rgba(247,181,17,.55);
-}
-
-/* asegura que el contenido quede por encima del overlay */
-.card--progress > * ,
-.card--plan > *{
-  position: relative;
-}
 #motivationHint::after{
   content:"STATUS: READY";
   margin-left:auto;
   font-size:.75rem;
-  font-weight:900;
-  color: rgba(4,53,73,.55);
+  font-weight:950;
+  color: var(--neonSoft);
+  text-shadow: 0 0 14px rgba(255,60,90,.18);
 }
 
-/* ===== Card background estilo "cyber pastel" (sin perder legibilidad) ===== */
-.card--tech{
-  position: relative;
-  overflow: hidden;
+/* ---------- Hero ---------- */
+.hero-card{ padding: 12px; }
+.hero-img{
+  width:100%;
+  height:260px;
+  display:block;
+  object-fit: cover;
+  border-radius: 16px;
+  border:1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
 }
 
-/* Capa decorativa (parecida a tu ejemplo) */
-.card--tech::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  pointer-events:none;
-  opacity: .80;
-
-  background:
-    /* diagonales suaves */
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .20) 0%,
-      rgba(0, 180, 200, .20) 22%,
-      rgba(255, 120, 200, .18) 22%,
-      rgba(255, 120, 200, .18) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-
-    /* circuitos: líneas finas */
-    repeating-linear-gradient(
-      0deg,
-      rgba(4,53,73,.08) 0px,
-      rgba(4,53,73,.08) 1px,
-      transparent 1px,
-      transparent 18px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(4,53,73,.06) 0px,
-      rgba(4,53,73,.06) 1px,
-      transparent 1px,
-      transparent 22px
-    ),
-
-    /* nodos */
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
+/* ---------- KPI ---------- */
+.kpi-grid{
+  display:grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap:12px;
 }
 
-/* Capa “glass” que garantiza lectura */
-.card--tech::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background: rgba(255,255,255,.70);
-  backdrop-filter: blur(10px);
-}
-
-/* El contenido siempre por encima */
-.card--tech > *{
-  position: relative;
-  z-index: 1;
-}
-
-/* ===== Asegurar legibilidad de controles dentro de cards con fondo ===== */
-.card--tech .segmented{
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(4,53,73,.14);
-}
-
-.card--tech .select{
-  background: rgba(255,255,255,.75);
-  border: 1px solid rgba(4,53,73,.18);
-}
-
-.card--tech .label,
-.card--tech .card__title{
-  color: var(--text);
-}
-
-.card--tech .hint{
-  color: rgba(4,53,73,.65);
-}
-
-/* Botón principal siempre sólido y legible */
-.card--tech .btn--primary{
-  color:#fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-
-/* ===== Todas las tarjetas con fondo “cyber pastel” + legibilidad ===== */
-.card{
-  position: relative;
-  overflow: hidden;
-}
-
-/* Capa decorativa (fondo estilo circuito pastel) */
-.card::before{
-  content:"";
-  position:absolute;
-  inset:-40px;
-  pointer-events:none;
-  opacity: .55;
-
-  background:
-    /* diagonales pastel */
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .20) 0%,
-      rgba(0, 180, 200, .20) 22%,
-      rgba(255, 120, 200, .18) 22%,
-      rgba(255, 120, 200, .18) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-
-    /* “circuitos” */
-    repeating-linear-gradient(
-      0deg,
-      rgba(4,53,73,.08) 0px,
-      rgba(4,53,73,.08) 1px,
-      transparent 1px,
-      transparent 18px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      rgba(4,53,73,.06) 0px,
-      rgba(4,53,73,.06) 1px,
-      transparent 1px,
-      transparent 22px
-    ),
-
-    /* nodos */
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
-}
-
-/* Capa “glass” para que texto/botones se lean perfecto */
-.card::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  background: rgba(255,255,255,.72);
-  backdrop-filter: blur(10px);
-}
-
-/* Todo el contenido por encima */
-.card > *{
-  position: relative;
-  z-index: 1;
-}
-
-/* Controles siempre legibles dentro de las cards */
-.card .segmented{
-  background: rgba(255,255,255,.65);
-  border: 1px solid rgba(4,53,73,.14);
-}
-
-.card .select{
-  background: rgba(255,255,255,.78);
-  border: 1px solid rgba(4,53,73,.18);
-}
-
-.card .hint{
-  color: rgba(4,53,73,.65);
-}
-
-/* Botón primario sólido */
-.card .btn--primary{
-  color:#fff;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-
-/* ===== Todas las tarjetas con fondo “cyber pastel” + legibilidad ===== */
-.card{
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.card::before{
-  content:"" !important;
-  position:absolute !important;
-  inset:-40px !important;
-  pointer-events:none !important;
-  opacity: .60 !important;
-
-  background:
-    linear-gradient(135deg,
-      rgba(0, 180, 200, .22) 0%,
-      rgba(0, 180, 200, .22) 22%,
-      rgba(255, 120, 200, .20) 22%,
-      rgba(255, 120, 200, .20) 46%,
-      rgba(255, 255, 255, 0) 46%,
-      rgba(255, 255, 255, 0) 100%
-    ),
-    repeating-linear-gradient(0deg, rgba(4,53,73,.10) 0 1px, transparent 1px 18px),
-    repeating-linear-gradient(90deg, rgba(4,53,73,.08) 0 1px, transparent 1px 22px),
-    radial-gradient(circle at 18% 30%, rgba(255,255,255,.75) 0 2px, transparent 3px),
-    radial-gradient(circle at 62% 48%, rgba(255,255,255,.65) 0 2px, transparent 3px),
-    radial-gradient(circle at 78% 72%, rgba(255,255,255,.60) 0 2px, transparent 3px);
-}
-
-.card::after{
-  content:"" !important;
-  position:absolute !important;
-  inset:0 !important;
-  pointer-events:none !important;
-  background: rgba(255,255,255,.74) !important;
-  backdrop-filter: blur(10px) !important;
-}
-
-/* contenido siempre por encima */
-.card > *{
-  position: relative !important;
-  z-index: 1 !important;
-}
-
-/* legibilidad de controles */
-.card .segmented{ background: rgba(255,255,255,.65) !important; }
-.card .select{ background: rgba(255,255,255,.78) !important; }
-.card .btn--primary{ color:#fff !important; }
-/* ===== Más visible sin perder legibilidad ===== */
-.card::before{
-  opacity: .90 !important;   /* sube el fondo */
-}
-
-.card::after{
-  background: rgba(255,255,255,.62) !important; /* baja el “glass” */
-}
-/* ==========================
-   FROSTED GLASS (exacto como tu captura)
-   Requisitos: ./bg-datacenter.webp en el repo
-   Pegar al FINAL del app.css
-   ========================== */
-
-/* Apaga decoraciones anteriores que estén pisando */
-.layout::before{ display:none !important; }
-.card::before, .card::after{ content:none !important; display:none !important; }
-body::after{ content:none !important; }
-
-/* Fondo datacenter */
-body{
-  background: url("./bg-datacenter.webp") center/cover no-repeat fixed !important;
-  background-color: #061a24 !important; /* fallback */
-}
-
-/* Tinte general (azulado) para “unificar” y mantener legibilidad */
-body::before{
-  content:"" !important;
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: -1 !important;
-  pointer-events: none !important;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 40, 60, .22) 0%,
-    rgba(0, 40, 60, .16) 55%,
-    rgba(0, 40, 60, .20) 100%
-  ) !important;
-}
-
-/* iOS: evita saltos del fixed */
-@supports (-webkit-touch-callout: none){
-  body{ background-attachment: scroll !important; }
-}
-
-/* TARJETAS GLASS */
-.card{
-  background: rgba(255,255,255,.14) !important;
-  border: 1px solid rgba(255,255,255,.34) !important;
-  box-shadow:
-    0 22px 70px rgba(0,0,0,.28),
-    inset 0 1px 0 rgba(255,255,255,.22) !important;
-  backdrop-filter: blur(18px) saturate(145%) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(145%) !important;
-}
-
-/* Títulos y separadores como en “glass UI” */
-.card__title{
-  border-bottom: 1px solid rgba(255,255,255,.22) !important;
-}
-
-/* Controles (tabs / selects / switch) también glass */
-.segmented{
-  background: rgba(255,255,255,.10) !important;
-  border: 1px solid rgba(255,255,255,.26) !important;
-}
-
-.segmented__btn{
-  color: rgba(4,53,73,.90) !important; /* tu texto sigue oscuro y legible */
-}
-
-.segmented__btn.is-active{
-  background: rgba(255,255,255,.22) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.35) !important;
-}
-
-.select{
-  background: rgba(255,255,255,.12) !important;
-  border: 1px solid rgba(255,255,255,.28) !important;
-}
-
-.switch{
-  background: rgba(255,255,255,.12) !important;
-  border: 1px solid rgba(255,255,255,.26) !important;
-}
-
-.switch__ui{
-  background: rgba(255,255,255,.18) !important;
-  border: 1px solid rgba(255,255,255,.28) !important;
-}
-
-/* Botón principal: sólido y muy legible (como en la captura) */
-#startBtn{
-  background: rgba(4,151,167,.55) !important;
-  color: #fff !important;
-  box-shadow: 0 18px 40px rgba(0,0,0,.22) !important;
-}
-#startBtn:disabled{
-  background: rgba(4,151,167,.28) !important;
-}
-
-/* KPI mini-cards: glass */
 .kpi{
-  background: rgba(255,255,255,.10) !important;
-  border: 1px solid rgba(255,255,255,.24) !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.18) !important;
+  padding:14px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
 
-/* Hint “Enfócate” glass */
-.hint--motivation{
-  background: rgba(255,255,255,.12) !important;
-  border: 1px solid rgba(255,255,255,.26) !important;
-}
-
-/* Texto secundario ligeramente más suave */
-.hint, .kpi__label, .plan__row span{
-  color: rgba(4,53,73,.78) !important;
-}
-/* ===== Texto tipo “neón” como el banner (más contraste) ===== */
-
-/* Títulos (Progreso / Plan de estudio) */
-.card__title{
-  color: rgba(255,255,255,.94) !important;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.22),
-    0 10px 26px rgba(255, 80, 110, .22) !important;
-}
-
-/* Labels generales dentro de cards */
-.card, .card *{
-  color: rgba(255,255,255,.86);
-}
-
-/* Texto secundario (labels pequeños) */
-.kpi__label,
-.plan__row span,
-.hint,
-.quiz__sub{
-  color: rgba(255,255,255,.72) !important;
-  text-shadow: 0 8px 20px rgba(0,0,0,.18) !important;
-}
-
-/* Números KPI (0, 0%) con más “poder” */
 .kpi__num{
-  color: rgba(255,255,255,.98) !important;
-  font-weight: 950 !important;
-  letter-spacing: .3px !important;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.25),
-    0 0 18px rgba(255, 70, 70, .28) !important;
-}
-
-/* Valores a la derecha del plan (15 preguntas, etc.) */
-.plan__row strong{
-  color: rgba(255,255,255,.92) !important;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.22),
-    0 0 14px rgba(255, 70, 70, .28) !important;
-}
-
-/* Bordes internos un poco más visibles */
-.kpi,
-.plan__row{
-  border-color: rgba(255,255,255,.22) !important;
-}
-
-/* Si quieres que el texto oscuro (como antes) NO se imponga */
-.label,
-.segmented__btn,
-.select{
-  color: rgba(255,255,255,.86) !important;
-}
-
-/* Select: que no se pierda */
-.select{
-  background: rgba(255,255,255,.10) !important;
-  border-color: rgba(255,255,255,.26) !important;
-}
-/* ===== Cards más claras/translúcidas (se ve más el fondo) ===== */
-.card{
-  background: rgba(255,255,255,.10) !important;     /* antes .14 */
-  backdrop-filter: blur(22px) saturate(155%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(155%) !important;
-
-  border: 1px solid rgba(255,255,255,.28) !important;
-  box-shadow:
-    0 22px 70px rgba(0,0,0,.26),
-    inset 0 1px 0 rgba(255,255,255,.18) !important;
-}
-
-/* KPI dentro de Progreso: un pelín más opacos para leerse */
-.kpi{
-  background: rgba(255,255,255,.12) !important;
-  border: 1px solid rgba(255,255,255,.22) !important;
-}
-
-/* Plan rows: divisores visibles */
-.plan__row{
-  border-bottom-color: rgba(255,255,255,.18) !important;
-}
-
-/* ==========================
-   RED NEON TEXT (sobre frosted glass)
-   Mantiene el glass y pone texto/números en rojo
-   ========================== */
-
-:root{
-  --neon-red: rgba(255, 70, 70, 1);
-  --neon-red-soft: rgba(255, 70, 70, .78);
-  --neon-glow: rgba(255, 70, 70, .38);
-}
-
-/* Títulos de tarjetas */
-.card__title{
-  color: var(--neon-red) !important;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.18),
-    0 0 18px var(--neon-glow),
-    0 10px 30px rgba(0,0,0,.18) !important;
-}
-
-/* Etiquetas (Modo, Bloque, Preguntas, Temporizador, etc.) */
-.label{
-  color: var(--neon-red-soft) !important;
-  text-shadow:
-    0 0 12px rgba(255, 70, 70, .20),
-    0 8px 22px rgba(0,0,0,.14) !important;
-}
-
-/* Números KPI (0, 0%) */
-.kpi__num{
-  color: rgba(255,255,255,.98) !important; /* base clara */
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.18),
-    0 0 22px var(--neon-glow) !important;
-}
-
-/* Para que el “0” y el “0%” sean rojo directamente */
-.kpi__num{
-  color: var(--neon-red) !important;
-  font-weight: 950 !important;
-}
-
-/* Texto secundario */
-.kpi__label,
-.plan__row span,
-.hint,
-.quiz__sub{
-  color: rgba(255,255,255,.80) !important;  /* legible sobre glass */
-  text-shadow: 0 8px 18px rgba(0,0,0,.18) !important;
-}
-
-/* Valores del plan (15 preguntas, etc.) */
-.plan__row strong{
-  color: var(--neon-red) !important;
-  text-shadow:
-    0 2px 0 rgba(0,0,0,.18),
-    0 0 16px rgba(255, 70, 70, .28) !important;
-}
-
-/* Botones del segmented: texto más vivo */
-.segmented__btn{
-  color: rgba(255,255,255,.88) !important;
-  text-shadow: 0 8px 18px rgba(0,0,0,.16) !important;
-}
-.segmented__btn.is-active{
-  color: rgba(255,255,255,.96) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.30),
-    0 0 18px rgba(255, 70, 70, .16) !important;
-}
-
-/* Select: texto visible */
-.select{
-  color: rgba(255,255,255,.90) !important;
-}
-
-/* Hint: “STATUS: READY” en rojo */
-#motivationHint::after{
-  color: rgba(255, 70, 70, .85) !important;
-  text-shadow: 0 0 14px rgba(255, 70, 70, .20) !important;
-}
-/* ==========================
-   TUNING: rojo neón premium + legibilidad
-   ========================== */
-
-/* Rojo más “banner” (menos naranja) */
-:root{
-  --neon-red: rgba(255, 60, 90, 1);
-  --neon-red-soft: rgba(255, 80, 110, .85);
-  --neon-glow: rgba(255, 60, 90, .45);
-}
-
-/* Títulos: rojo + glow elegante */
-.card__title{
-  color: var(--neon-red) !important;
-  text-shadow:
-    0 1px 0 rgba(0,0,0,.20),
-    0 0 10px rgba(255, 60, 90, .28),
-    0 0 22px var(--neon-glow) !important;
-}
-
-/* Labels (Preguntas/Temporizador/etc.) un poco más “soft” */
-.label{
-  color: var(--neon-red-soft) !important;
-  text-shadow:
-    0 0 10px rgba(255, 60, 90, .18),
-    0 8px 18px rgba(0,0,0,.16) !important;
-}
-
-/* KPI números: rojo con glow, pero súper legible */
-.kpi__num{
-  color: var(--neon-red) !important;
+  font-size:1.6rem;
+  font-weight:950;
+  letter-spacing: .2px;
+  color: var(--neon);
   text-shadow:
     0 1px 0 rgba(0,0,0,.22),
-    0 0 18px rgba(255, 60, 90, .30),
-    0 0 30px rgba(255, 60, 90, .20) !important;
+    0 0 18px rgba(255,60,90,.30),
+    0 0 30px rgba(255,60,90,.20);
 }
 
-/* Texto normal: blanco limpio, no gris */
-.card,
-.kpi__label,
-.plan__row span,
-.hint,
-.hint--motivation .hint__text{
-  color: rgba(255,255,255,.88) !important;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
+.kpi__label{
+  color: rgba(255,255,255,.78);
+  font-size:.85rem;
+  text-shadow: 0 10px 22px rgba(0,0,0,.18);
 }
 
-/* Valores del plan (derecha): rojo más fuerte */
-.plan__row strong{
-  color: var(--neon-red) !important;
-  text-shadow:
-    0 1px 0 rgba(0,0,0,.20),
-    0 0 14px rgba(255, 60, 90, .26) !important;
-}
-
-/* Separadores del plan más visibles */
+/* ---------- Plan ---------- */
 .plan__row{
-  border-bottom-color: rgba(255,255,255,.18) !important;
-}
-
-/* “STATUS: READY” rojo premium */
-#motivationHint::after{
-  color: var(--neon-red-soft) !important;
-  text-shadow: 0 0 14px rgba(255, 60, 90, .18) !important;
-}
-
-/* ==========================
-   GLASS más transparente (como tu referencia)
-   ========================== */
-
-/* Cards más transparentes */
-.card{
-  background: rgba(255,255,255,.00) !important;      /* antes .10/.14 */
-  border: 1px solid rgba(255,255,255,.00) !important;
-  box-shadow:
-    0 22px 70px rgba(0,0,0,.02),
-    inset 0 1px 0 rgba(255,255,255,.01) !important;
-
-  backdrop-filter: blur(10px) saturate(50%) !important;
-  -webkit-backdrop-filter: blur(26px) saturate(100%) !important;
-}
-
-/* Controles también glass */
-.segmented,
-.select,
-.switch,
-.kpi,
-.hint--motivation{
-  background: rgba(255,255,255,.02) !important;
-  border-color: rgba(255,255,255,.10) !important;
-}
-
-/* Inputs: un pelín más sólidos para que se lean */
-.select{
-  background: rgba(255,255,255,.10) !important;
-}
-
-/* Botón “Empezar” mantiene presencia */
-#startBtn{
-  background: rgba(4,151,167,.52) !important;
-}
-
-/* ==========================
-   SELECT glass: menos blanco + texto más fuerte
-   ========================== */
-
-/* Campo cerrado */
-.select{
-  background: rgba(0,0,0,.18) !important;          /* baja el blanco */
-  border: 1px solid rgba(255,255,255,.26) !important;
-  color: rgba(255,255,255,.92) !important;         /* letras fuertes */
-  font-weight: 800 !important;
-  text-shadow: 0 6px 16px rgba(0,0,0,.22) !important;
-}
-
-/* Placeholder del select (opción vacía) */
-.select option{
-  color: #0b1f2a;
-}
-
-/* Dropdown abierto (Chrome/Edge suelen respetar esto) */
-.select{
-  color-scheme: dark; /* fuerza UI oscura en controles nativos cuando es posible */
-}
-
-/* Opciones del desplegable: oscuro + texto claro */
-.select option{
-  background: #0c1f2a;         /* oscuro */
-  color: rgba(255,255,255,.92);
-}
-
-/* Hover/selected (algunos navegadores lo ignoran, pero no molesta) */
-.select option:checked{
-  background: #0f3444;
-  color: #fff;
-}
-/* Dropdown del select: tono glass (no negro) */
-.select option{
-  background: #2b5162;                 /* azul glass */
-  color: rgba(255,255,255,.92);
-}
-
-/* Opción seleccionada (más “premium”) */
-.select option:checked{
-  background: #356b80;                 /* un poco más claro */
-  color: rgba(255,255,255,.98);
-}
-
-/* Si el navegador soporta, refuerza el look */
-.select{
-  color-scheme: dark;
-}
-/* ==========================
-   Switch: cambio de color visible al activar
-   ========================== */
-
-/* OFF */
-.switch__ui{
-  background: rgba(255,255,255,.10) !important;
-  border: 1px solid rgba(255,255,255,.26) !important;
-}
-
-/* ON: barra turquesa bien visible */
-.switch input:checked + .switch__ui{
-  background: rgba(4,151,167,.55) !important;
-  border-color: rgba(4,151,167,.55) !important;
-  box-shadow: 0 0 18px rgba(4,151,167,.22) !important;
-}
-
-/* Bolita */
-.switch__ui::after{
-  background: rgba(255,255,255,.95) !important;
-}
-
-/* Texto "Activado" un poco más brillante */
-.switch input:checked ~ .switch__text{
-  color: rgba(255,255,255,.92) !important;
-  text-shadow: 0 0 12px rgba(255,60,90,.18) !important;
-}
-/* ==========================
-   Integración de textos marcados (tabs + selects + valores)
-   ========================== */
-
-/* Tabs (Examen/Completo/Práctica/Repaso) */
-.segmented__btn{
-  color: rgba(255,255,255,.78) !important;      /* antes muy apagado */
-  font-weight: 900 !important;
-  text-shadow: 0 10px 20px rgba(0,0,0,.22) !important;
-}
-
-.segmented__btn.is-active{
-  color: rgba(255,255,255,.95) !important;
-  background: rgba(255,255,255,.16) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.28),
-    0 0 18px rgba(255, 60, 90, .14) !important;
-}
-
-/* Select (texto dentro: “Selecciona un bloque”, “15”, etc.) */
-.select{
-  color: rgba(255,255,255,.92) !important;      /* texto fuerte */
-  font-weight: 900 !important;
-  text-shadow: 0 10px 22px rgba(0,0,0,.22) !important;
-}
-
-/* Opciones placeholder (la primera opción vacía) — algunos navegadores */
-.select option[disabled],
-.select option[value=""]{
-  color: rgba(255,255,255,.62) !important;
-}
-
-/* Hint/Texto descriptivo (lo de “Se usarán tus fallos…”) */
-.hint, #blockHint{
-  color: rgba(255,255,255,.78) !important;
-  text-shadow: 0 10px 20px rgba(0,0,0,.18) !important;
-}
-
-/* Títulos de campos “Bloque / Preguntas / Temporizador” (labels) */
-.label{
-  color: rgba(255, 80, 110, .90) !important;    /* rojo integrado */
-  font-weight: 950 !important;
-  text-shadow:
-    0 0 14px rgba(255, 60, 90, .18),
-    0 10px 22px rgba(0,0,0,.18) !important;
-}
-
-/* Valor “Activado” del switch */
-.switch__text{
-  color: rgba(255,255,255,.90) !important;
-  font-weight: 900 !important;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
-}
-/* ==========================
-   Unificar fondos de controles: glass oscuro (sin blanco)
-   ========================== */
-
-/* Base glass para TODOS los controles */
-.segmented,
-.select,
-.switch{
-  background: rgba(255,255,255,.06) !important;   /* igual que el temporizador */
-  border: 1px solid rgba(255,255,255,.22) !important;
-  backdrop-filter: blur(22px) saturate(165%) !important;
-  -webkit-backdrop-filter: blur(22px) saturate(165%) !important;
-}
-
-/* Tabs container un poco más marcado */
-.segmented{
-  background: rgba(255,255,255,.08) !important;
-}
-
-/* Botones del segmented (no “bloques blancos”) */
-.segmented__btn{
-  background: transparent !important;
-  border: 0 !important;
-}
-
-.segmented__btn.is-active{
-  background: rgba(255,255,255,.14) !important;
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,.26) !important;
-}
-
-/* Selects: quita el blanco “de input” */
-.select{
-  background: rgba(255,255,255,.07) !important;
-  color: rgba(255,255,255,.92) !important;
-}
-
-/* Preguntas (select pequeño) y Bloque: mismo look */
-#countSelect.select,
-#blockSelect.select{
-  background: rgba(255,255,255,.07) !important;
-}
-
-/* Si algún estilo anterior mete blanco, lo machacamos */
-.select,
-.segmented,
-.switch{
-  box-shadow: none !important;
-}
-/* ==========================
-   Tabs: texto turquesa como el botón Empezar
-   ========================== */
-
-/* Inactivos: turquesa suave */
-.segmented__btn{
-  color: rgba(4,151,167,.92) !important;        /* mismo acento que Empezar */
-  font-weight: 950 !important;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
-}
-
-/* Activo: más intenso */
-.segmented__btn.is-active{
-  color: rgba(4,151,167,1) !important;
-  background: rgba(4,151,167,.14) !important;
-  box-shadow:
-    inset 0 0 0 1px rgba(4,151,167,.35),
-    0 0 18px rgba(4,151,167,.18) !important;
-}
-
-/* Si el glass está muy claro, reforzamos contraste del contenedor */
-.segmented{
-  border-color: rgba(255,255,255,.24) !important;
-}
-/* ==========================
-   FIX Windows (hueco) + FIX iOS (negro/blur)
-   Pegar al FINAL del app.css
-   ========================== */
-
-/* 1) Windows/Desktop: evita que Grid estire las cards (quita el hueco) */
-.layout{
-  align-items: start;              /* clave */
-}
-.layout > .card,
-.layout > aside{
-  align-self: start;               /* asegura */
-}
-
-/* 2) Texto del hint siempre legible (en iPhone te quedaba oscuro) */
-.hint--motivation .hint__text{
-  color: rgba(255,255,255,.88) !important;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18) !important;
-}
-
-/* 3) iOS/Safari: cuando el blur falla o se degrada, subimos opacidad del glass
-      y añadimos un “velo” interno para evitar el fondo negro */
-@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
-  .card, .segmented, .select, .switch, .kpi, .hint--motivation{
-    background: rgba(18, 70, 90, .55) !important;   /* glass azul, nada de negro */
-    border-color: rgba(255,255,255,.22) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-
-  .card{
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    background: linear-gradient(
-      180deg,
-      rgba(255,255,255,.10) 0%,
-      rgba(255,255,255,.04) 100%
-    );
-  }
-
-  .card > *{
-    position: relative;
-    z-index: 1;
-  }
-}
-
-/* 4) iPhone/iPad (extra): si Safari decide “reducir transparencias”, fuerza legibilidad */
-@media (prefers-reduced-transparency: reduce){
-  .card, .segmented, .select, .switch, .kpi, .hint--motivation{
-    background: rgba(18, 70, 90, .60) !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-  }
-}
-/* ==========================
-   Coach inline (glass)
-   ========================== */
-
-#coachCard{
-  background: rgba(255,255,255,.06) !important;
-}
-
-.coach__log{
-  height: 200px;
-  overflow: auto;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(0,0,0,.08);
-}
-
-.coach__msg{
   display:flex;
-  gap:10px;
-  margin: 10px 0;
+  justify-content:space-between;
+  padding:10px 0;
+  border-bottom:1px solid rgba(255,255,255,.16);
+}
+.plan__row:last-child{ border-bottom:0; }
+.plan__row span{ color: rgba(255,255,255,.78); }
+.plan__row strong{
+  color: var(--neon);
+  text-shadow: 0 0 14px rgba(255, 60, 90, .26);
 }
 
-.coach__bubble{
-  max-width: 85%;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.90);
-  line-height: 1.35;
-}
-
-.coach__msg--me{
-  justify-content: flex-end;
-}
-.coach__msg--me .coach__bubble{
-  background: rgba(4,151,167,.20);
-  border-color: rgba(4,151,167,.35);
-}
-
-.coach__msg--bot .coach__bubble{
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.18);
-}
-
-.coach__composer{
-  display:flex;
-  gap:10px;
-  margin-top: 12px;
-}
-
-.coach__input{
-  flex: 1;
-  min-height: 46px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.22);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.92);
-  outline: none;
-  font-weight: 800;
-}
-
-.coach__input::placeholder{
-  color: rgba(255,255,255,.55);
-}
-
-.coach__input:focus{
-  border-color: rgba(255, 60, 90, .35);
-  box-shadow: 0 0 0 4px rgba(255, 60, 90, .16);
-}
-
-.coach__send{
-  min-width: 120px;
-  border-radius: 14px;
-}
-
-.coach__actions{
-  display:flex;
-  align-items:center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.coach__hint{
-  color: rgba(255,255,255,.70);
-  font-weight: 700;
-  font-size: .85rem;
-}
-
-/* móvil: que no se rompa */
-@media (max-width: 520px){
-  .coach__log{ height: 170px; }
-  .coach__actions{ flex-direction: column; align-items:flex-start; }
-  .coach__send{ min-width: 96px; }
-}
-/* ==========================
-   Coach inline (SIN card dentro de card)
-   ========================== */
-
+/* ---------- Coach inline ---------- */
 .coach{
   margin-top: 14px;
   padding: 16px;
   border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.20);
+  border: 1px solid rgba(255,255,255,.18);
   background: rgba(255,255,255,.06);
-  backdrop-filter: blur(22px) saturate(165%);
-  -webkit-backdrop-filter: blur(22px) saturate(165%);
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
 }
 
 .coach .card__title{
   margin: 0 0 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(255,255,255,.18);
+  border-bottom: 1px solid rgba(255,255,255,.16);
 }
 
 .coach__log{
@@ -1739,8 +480,26 @@ body::before{
   overflow: auto;
   padding: 12px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(0,0,0,.08);
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.10);
+}
+
+.coach__msg{ display:flex; gap:10px; margin: 10px 0; }
+.coach__msg--me{ justify-content:flex-end; }
+
+.coach__bubble{
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  line-height: 1.35;
+}
+
+.coach__msg--me .coach__bubble{
+  background: rgba(4,151,167,.18);
+  border-color: rgba(4,151,167,.30);
 }
 
 .coach__composer{
@@ -1754,7 +513,7 @@ body::before{
   min-height: 46px;
   padding: 12px 14px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.22);
+  border: 1px solid rgba(255,255,255,.18);
   background: rgba(255,255,255,.06);
   color: rgba(255,255,255,.92);
   outline: none;
@@ -1763,7 +522,12 @@ body::before{
 
 .coach__input::placeholder{ color: rgba(255,255,255,.55); }
 
-.coach__send{ min-width: 110px; border-radius: 14px; }
+.coach__input:focus{
+  border-color: rgba(255, 60, 90, .35);
+  box-shadow: 0 0 0 4px rgba(255, 60, 90, .16);
+}
+
+.coach__send{ min-width: 110px; }
 
 .coach__actions{
   display:flex;
@@ -1779,23 +543,82 @@ body::before{
   font-size: .85rem;
 }
 
-/* Mensajes */
-.coach__msg{ display:flex; gap:10px; margin: 10px 0; }
-.coach__bubble{
-  max-width: 85%;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.90);
-  line-height: 1.35;
-}
-.coach__msg--me{ justify-content:flex-end; }
-.coach__msg--me .coach__bubble{
-  background: rgba(4,151,167,.20);
-  border-color: rgba(4,151,167,.35);
+@media (max-width: 520px){
+  .coach__log{ height: 170px; }
+  .coach__actions{ flex-direction: column; align-items:flex-start; }
+  .coach__send{ min-width: 96px; }
 }
 
+/* ---------- Modal (quiz) (mantén simple y legible) ---------- */
+.modal{ position: fixed; inset:0; display:none; z-index:50; }
+.modal.is-open{ display:block; }
+.modal__backdrop{ position:absolute; inset:0; background: rgba(0,0,0,.55); }
+.modal__panel{ position: relative; max-width: 900px; margin: 24px auto; padding: 0 16px; }
+
+.quiz{
+  background: rgba(10, 30, 40, .75);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: var(--r);
+  box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  overflow:hidden;
+  backdrop-filter: blur(18px) saturate(145%);
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+}
+.quiz__top{ display:flex; justify-content:space-between; padding:16px 18px; border-bottom:1px solid rgba(255,255,255,.14); }
+.quiz__title{ font-weight:950; color: rgba(255,255,255,.92); }
+.quiz__sub{ color: rgba(255,255,255,.72); font-size:.9rem; }
+.quiz__right{ display:flex; align-items:center; gap:10px; }
+.quiz__timer{ padding:8px 10px; border:1px solid rgba(255,255,255,.14); border-radius:12px; background: rgba(255,255,255,.08); }
+
+.quiz__body{ padding: 18px; }
+.quiz__q{ font-size: 1.05rem; line-height: 1.6; margin-bottom: 14px; }
+.quiz__opts{ display:flex; flex-direction:column; gap:10px; }
+
+.opt{
+  width:100%;
+  text-align:left;
+  background: rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14);
+  border-radius: 14px;
+  padding: 12px 14px;
+  cursor:pointer;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.opt:hover{ border-color: rgba(4,151,167,.40); background: rgba(4,151,167,.10); }
+
+.opt__key{
+  min-width:34px; height:34px;
+  border-radius: 12px;
+  display:flex; align-items:center; justify-content:center;
+  background: rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.14);
+  font-weight:950;
+}
+.opt.is-selected{ border-color: rgba(4,151,167,.55); background: rgba(4,151,167,.12); }
+.opt.is-correct{ border-color: rgba(76,201,240,.60); background: rgba(76,201,240,.14); }
+.opt.is-wrong{ border-color: rgba(255,60,90,.55); background: rgba(255,60,90,.10); }
+
+.quiz__footer{ display:flex; gap:10px; padding:16px 18px; border-top:1px solid rgba(255,255,255,.14); }
+
+/* ---------- Fallback iOS si blur falla ---------- */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .card, .segmented, .select, .switch, .kpi, .hint--motivation, .coach, .quiz{
+    background: rgba(18, 70, 90, .55) !important;
+    border-color: rgba(255,255,255,.18) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce){
+  .card, .segmented, .select, .switch, .kpi, .hint--motivation, .coach, .quiz{
+    background: rgba(18, 70, 90, .60) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
 
 
 
