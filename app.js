@@ -853,3 +853,160 @@ function setupCoach(){
 }
 
 setupCoach();
+// ==========================
+// Coach TAI (inline) · v1 local (sin API)
+// ==========================
+(function setupCoachTAI(){
+  const coachCard = document.getElementById("coachCard");
+  const logEl = document.getElementById("coachLog");
+  const inputEl = document.getElementById("coachInput");
+  const sendBtn = document.getElementById("coachSend");
+  const clearBtn = document.getElementById("coachClear");
+
+  if (!coachCard || !logEl || !inputEl || !sendBtn || !clearBtn) return;
+
+  const COACH_STORE = "opostudy_coach_v1";
+
+  function loadChat(){
+    try { return JSON.parse(localStorage.getItem(COACH_STORE) || "[]"); }
+    catch { return []; }
+  }
+  function saveChat(msgs){
+    localStorage.setItem(COACH_STORE, JSON.stringify(msgs.slice(-40))); // limita historial
+  }
+
+  function escapeHtml(s){
+    return String(s)
+      .replaceAll("&","&amp;")
+      .replaceAll("<","&lt;")
+      .replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;")
+      .replaceAll("'","&#039;");
+  }
+
+  function addMsg(role, text){
+    const msg = { role, text, t: new Date().toISOString() };
+    const msgs = loadChat();
+    msgs.push(msg);
+    saveChat(msgs);
+    render();
+  }
+
+  function render(){
+    const msgs = loadChat();
+    logEl.innerHTML = "";
+    msgs.forEach(m => {
+      const row = document.createElement("div");
+      row.className = "coach__msg " + (m.role === "me" ? "coach__msg--me" : "coach__msg--bot");
+      row.innerHTML = `<div class="coach__bubble">${escapeHtml(m.text).replaceAll("\n","<br>")}</div>`;
+      logEl.appendChild(row);
+    });
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function normalizeCmd(raw){
+    return raw.trim().toLowerCase();
+  }
+
+  function getAccuracy(){
+    const a = state?.stats?.totalAnswered || 0;
+    const c = state?.stats?.totalCorrect || 0;
+    return a ? Math.round((c / a) * 100) : 0;
+  }
+
+  function reply(cmdRaw){
+    const cmd = normalizeCmd(cmdRaw);
+
+    // ayuda
+    if (cmd === "ayuda" || cmd === "help" || cmd === "?"){
+      return [
+        "Comandos disponibles:",
+        "- fallos → repaso inteligente (últimos " + (typeof MISTAKES_LOOKBACK_DAYS !== "undefined" ? MISTAKES_LOOKBACK_DAYS : 30) + " días)",
+        "- plan → plan de estudio para hoy",
+        "- bloque 1|2|3|4 → recomendación por bloque",
+        "- tiempo → sesiones 10/20/45 min",
+        "- ayuda → ver comandos"
+      ].join("\n");
+    }
+
+    // fallos
+    if (cmd.startsWith("fallos")){
+      const pending = (typeof getPendingMistakesCount === "function") ? getPendingMistakesCount(null) : 0;
+      if (!pending) return "No tienes fallos pendientes 🎯. Haz 15 preguntas en modo Examen o sube dificultad.";
+      return `Tienes ${pending} fallos pendientes.\nRecomendación: entra en “Repaso de fallos” y haz 15.\nTip: si quieres filtrar: escribe “bloque 2”.`;
+    }
+
+    // bloque N
+    const mBlock = cmd.match(/^bloque\s*([1-4])$/);
+    if (mBlock){
+      const b = Number(mBlock[1]);
+      return [
+        `Bloque ${b}: plan recomendado`,
+        `1) Examen (15) del Bloque ${b}`,
+        `2) Práctica → Trabajo práctico del Bloque ${b}`,
+        `3) Repaso de fallos (si tienes pendientes)`,
+      ].join("\n");
+    }
+
+    // plan
+    if (cmd.startsWith("plan")){
+      const acc = getAccuracy();
+      const pending = (typeof getPendingMistakesCount === "function") ? getPendingMistakesCount(null) : 0;
+
+      let foco = "Examen (15)";
+      if (pending >= 10) foco = "Repaso de fallos (15)";
+      else if (acc < 60) foco = "Práctica (test con corrección)";
+
+      return [
+        "Plan de hoy (15–25 min):",
+        `- Foco: ${foco}`,
+        `- Acierto actual: ${acc}%`,
+        `- Fallos pendientes: ${pending}`,
+        "Regla: si fallas 3 seguidas → cambia a Práctica y lee explicación."
+      ].join("\n");
+    }
+
+    // tiempo
+    if (cmd.startsWith("tiempo")){
+      return [
+        "Sesiones rápidas:",
+        "- 10 min: 10 preguntas (Práctica)",
+        "- 20 min: 15 preguntas (Examen)",
+        "- 45 min: 30 preguntas (Completo) + repaso de fallos"
+      ].join("\n");
+    }
+
+    // default
+    return `No pillo ese comando.\nEscribe “ayuda” para ver opciones.`;
+  }
+
+  // Eventos
+  sendBtn.addEventListener("click", () => {
+    const txt = inputEl.value.trim();
+    if (!txt) return;
+    addMsg("me", txt);
+    const ans = reply(txt);
+    addMsg("bot", ans);
+    inputEl.value = "";
+    inputEl.focus();
+  });
+
+  inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter"){
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    localStorage.removeItem(COACH_STORE);
+    render();
+    addMsg("bot", "Chat limpio. Escribe “ayuda” para ver comandos.");
+  });
+
+  // Init
+  render();
+  if (!loadChat().length){
+    addMsg("bot", 'Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.');
+  }
+})();
