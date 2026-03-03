@@ -268,22 +268,26 @@
     </section>
 
     <section class="page" data-page="temario" hidden>
-      <div class="layout" style="grid-template-columns:1fr;">
-        <section class="card card--tech">
-          <h2 class="card__title">Temario</h2>
-          <div class="hint">Bloques → temas → checklist + recursos.</div>
-        </section>
-      </div>
-    </section>
+  <div class="layout" style="grid-template-columns:1fr;">
+    <section class="card card--tech">
+      <h2 class="card__title">Temario</h2>
+      <div class="hint">Marca subtemas. Se guarda tu progreso por bloque.</div>
 
-    <section class="page" data-page="stats" hidden>
-      <div class="layout" style="grid-template-columns:1fr;">
-        <section class="card card--tech">
-          <h2 class="card__title">Estadísticas</h2>
-          <div class="hint">Gráficas + histórico + debilidades.</div>
-        </section>
-      </div>
+      <div id="temarioSummary" class="temario__summary"></div>
+      <div id="temarioList" class="temario"></div>
     </section>
+  </div>
+</section>
+    <section class="page" data-page="stats" hidden>
+  <div class="layout" style="grid-template-columns:1fr;">
+    <section class="card card--tech">
+      <h2 class="card__title">Estadísticas</h2>
+      <div class="hint">Progreso por bloque (temario) + rendimiento (tests).</div>
+
+      <div id="statsBlocks" class="statsBlocks"></div>
+    </section>
+  </div>
+</section>
 
     <section class="page" data-page="simulacro" hidden>
       <div class="layout" style="grid-template-columns:1fr;">
@@ -407,6 +411,7 @@
   <script src="./app.js?v=23"></script>
 </body>
 </html>
+
 
 
 
