@@ -1714,6 +1714,87 @@ body::before{
   .coach__actions{ flex-direction: column; align-items:flex-start; }
   .coach__send{ min-width: 96px; }
 }
+/* ==========================
+   Coach inline (SIN card dentro de card)
+   ========================== */
+
+.coach{
+  margin-top: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.20);
+  background: rgba(255,255,255,.06);
+  backdrop-filter: blur(22px) saturate(165%);
+  -webkit-backdrop-filter: blur(22px) saturate(165%);
+}
+
+.coach .card__title{
+  margin: 0 0 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,.18);
+}
+
+.coach__log{
+  height: 180px;
+  overflow: auto;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(0,0,0,.08);
+}
+
+.coach__composer{
+  display:flex;
+  gap:10px;
+  margin-top: 12px;
+}
+
+.coach__input{
+  flex: 1;
+  min-height: 46px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.92);
+  outline: none;
+  font-weight: 800;
+}
+
+.coach__input::placeholder{ color: rgba(255,255,255,.55); }
+
+.coach__send{ min-width: 110px; border-radius: 14px; }
+
+.coach__actions{
+  display:flex;
+  align-items:center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.coach__hint{
+  color: rgba(255,255,255,.70);
+  font-weight: 700;
+  font-size: .85rem;
+}
+
+/* Mensajes */
+.coach__msg{ display:flex; gap:10px; margin: 10px 0; }
+.coach__bubble{
+  max-width: 85%;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.90);
+  line-height: 1.35;
+}
+.coach__msg--me{ justify-content:flex-end; }
+.coach__msg--me .coach__bubble{
+  background: rgba(4,151,167,.20);
+  border-color: rgba(4,151,167,.35);
+}
 
 
 
