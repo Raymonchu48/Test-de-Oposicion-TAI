@@ -1052,3 +1052,174 @@ setupCoach();
   showPage("dashboard");
 })();
 
+/* ==========================
+   Temario (Supabase) + Progreso (local)
+   ========================== */
+
+const SYLLABUS_TABLE = "syllabus_items";
+const TEMARIO_PROGRESS_KEY = "opostudy_temario_progress_v1";
+
+function loadTemarioProgress(){
+  try { return JSON.parse(localStorage.getItem(TEMARIO_PROGRESS_KEY) || "{}"); }
+  catch { return {}; }
+}
+function saveTemarioProgress(store){
+  localStorage.setItem(TEMARIO_PROGRESS_KEY, JSON.stringify(store));
+}
+
+let _temarioCache = null;
+
+async function fetchSyllabusItems(){
+  if (_temarioCache) return _temarioCache;
+
+  const { data, error } = await sb
+    .from(SYLLABUS_TABLE)
+    .select("id, block, topic, title, detail, ord")
+    .order("block", { ascending: true })
+    .order("topic", { ascending: true })
+    .order("ord", { ascending: true });
+
+  if (error) throw error;
+  _temarioCache = data || [];
+  return _temarioCache;
+}
+
+function groupByBlock(items){
+  const m = new Map();
+  for (const it of items){
+    const b = Number(it.block);
+    if (!m.has(b)) m.set(b, []);
+    m.get(b).push(it);
+  }
+  return Array.from(m.entries()).sort((a,b)=>a[0]-b[0]);
+}
+
+function computeBlockPct(items, progressStore, block){
+  const blockItems = items.filter(x => Number(x.block) === Number(block));
+  if (!blockItems.length) return 0;
+  const done = blockItems.filter(x => progressStore[x.id]?.done).length;
+  return Math.round((done / blockItems.length) * 100);
+}
+
+function renderTemarioSummary(items){
+  const el = document.getElementById("temarioSummary");
+  if (!el) return;
+  const store = loadTemarioProgress();
+
+  const blocks = [1,2,3,4].map(b => ({
+    block: b,
+    pct: computeBlockPct(items, store, b)
+  }));
+
+  el.innerHTML = blocks.map(b => `
+    <div class="temario__chip">
+      <div class="temario__chipTitle">Bloque ${b.block}</div>
+      <div class="temario__bar"><div class="temario__barFill" style="width:${b.pct}%"></div></div>
+      <div class="hint" style="margin-top:8px;">${b.pct}% completado</div>
+    </div>
+  `).join("");
+}
+
+function renderTemario(items){
+  const listEl = document.getElementById("temarioList");
+  if (!listEl) return;
+
+  const store = loadTemarioProgress();
+  const groups = groupByBlock(items);
+
+  listEl.innerHTML = groups.map(([block, blockItems]) => {
+    const doneCount = blockItems.filter(x => store[x.id]?.done).length;
+    const pct = blockItems.length ? Math.round((doneCount / blockItems.length) * 100) : 0;
+
+    return `
+      <div class="temario__block">
+        <div class="temario__blockHead">
+          <div class="temario__blockTitle">Bloque ${block}</div>
+          <div class="temario__blockMeta">${doneCount}/${blockItems.length} · ${pct}%</div>
+        </div>
+        <div class="temario__items">
+          ${blockItems.map(it => {
+            const checked = !!store[it.id]?.done;
+            return `
+              <div class="temario__item">
+                <input class="temario__check" type="checkbox" data-temario-id="${it.id}" ${checked ? "checked" : ""}>
+                <div>
+                  <div class="temario__title">${escapeHtml(it.title)}</div>
+                  ${it.detail ? `<div class="temario__detail">${escapeHtml(it.detail)}</div>` : ""}
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // listeners
+  listEl.querySelectorAll('input[type="checkbox"][data-temario-id]').forEach(chk => {
+    chk.addEventListener("change", () => {
+      const id = chk.getAttribute("data-temario-id");
+      const storeNow = loadTemarioProgress();
+      storeNow[id] = { done: chk.checked, updated_at: new Date().toISOString() };
+      saveTemarioProgress(storeNow);
+
+      // re-render summary + stats
+      renderTemarioSummary(items);
+      renderStatsBlocks(items);
+    });
+  });
+}
+
+function renderStatsBlocks(items){
+  const el = document.getElementById("statsBlocks");
+  if (!el) return;
+
+  const store = loadTemarioProgress();
+  const blocks = [1,2,3,4].map(b => ({
+    block: b,
+    pct: computeBlockPct(items, store, b),
+    done: items.filter(x => Number(x.block)===b && store[x.id]?.done).length,
+    total: items.filter(x => Number(x.block)===b).length
+  }));
+
+  el.innerHTML = blocks.map(b => `
+    <div class="statsCard">
+      <div class="statsCard__top">
+        <div class="statsCard__title">Bloque ${b.block}</div>
+        <div class="statsCard__pct">${b.pct}%</div>
+      </div>
+      <div class="temario__bar" style="margin-top:10px;">
+        <div class="temario__barFill" style="width:${b.pct}%"></div>
+      </div>
+      <div class="hint" style="margin-top:10px;">${b.done}/${b.total} subtemas completados</div>
+    </div>
+  `).join("");
+}
+
+async function initTemarioPage(){
+  const items = await fetchSyllabusItems();
+  renderTemarioSummary(items);
+  renderTemario(items);
+}
+
+async function initStatsPage(){
+  const items = await fetchSyllabusItems();
+  renderStatsBlocks(items);
+}
+
+// Hook por hash (tu nav ya lo cambia)
+function currentPageId(){
+  return (location.hash || "#dashboard").replace("#", "");
+}
+async function onPageChange(){
+  const p = currentPageId();
+  try{
+    if (p === "temario") await initTemarioPage();
+    if (p === "stats") await initStatsPage();
+  }catch(e){
+    console.error(e);
+    alert("Error cargando datos: " + (e?.message || JSON.stringify(e)));
+  }
+}
+window.addEventListener("hashchange", onPageChange);
+onPageChange();
