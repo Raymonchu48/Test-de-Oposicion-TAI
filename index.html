@@ -75,22 +75,29 @@
       </div>
 
       <button class="btn btn--primary" id="startBtn" disabled>Empezar</button>
-      <div class="hint hint--motivation" id="motivationHint">
-    <section class="card">
-  <h2 class="card__title">Configurar test</h2>
-
-  ... (modo, bloque, preguntas, temporizador)
-
-  <button class="btn btn--primary" id="startBtn" disabled>Empezar</button>
-<section class="coach" id="coachCard">
-  
-</section>
-   <img class="hint__avatar" src="./coach.png" alt="Coach" loading="lazy">
+     <div class="hint hint--motivation" id="motivationHint">
+  <img class="hint__avatar" src="./coach.png" alt="Coach" loading="lazy">
   <span class="hint__text">
-    <strong>Enfocaté: 15 preguntas/ Prioriza precisión, revisa fallos y consolida Tús Conocimiento</strong>.
+    <strong>Enfócate: 15 preguntas.</strong> Prioriza precisión, revisa fallos y consolida tu conocimiento.
   </span>
 </div>
-    </section>
+
+<section class="coach" id="coachCard">
+  <h2 class="card__title">Coach TAI</h2>
+
+  <div class="coach__log" id="coachLog" aria-live="polite"></div>
+
+  <div class="coach__composer">
+    <input class="coach__input" id="coachInput" type="text"
+           placeholder="Escribe: 'fallos', 'plan', 'bloque 2', 'tiempo'..." autocomplete="off" />
+    <button class="btn btn--primary coach__send" id="coachSend" type="button">Enviar</button>
+  </div>
+
+  <div class="coach__actions">
+    <button class="btn btn--ghost btn--small" id="coachClear" type="button">Limpiar chat</button>
+    <span class="coach__hint">Tip: escribe “fallos” para repasar o “plan” para estrategia.</span>
+  </div>
+</section>
 
     <aside class="stack">
 
@@ -127,6 +134,7 @@
 </body>
 
 </html>
+
 
 
 
