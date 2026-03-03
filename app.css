@@ -619,6 +619,109 @@ body::before{
     -webkit-backdrop-filter: none !important;
   }
 }
+/* ===== Pages (SPA) ===== */
+.page{ display:none; }
+.page.is-active{ display:block; }
+
+/* deja espacio para la tabbar en móvil */
+body{ padding-bottom: 74px; }
+
+/* ===== Splash ===== */
+.splash{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.splash.is-hidden{ display:none; }
+
+.splash__panel{
+  width: min(560px, calc(100vw - 32px));
+  border-radius: 22px;
+  padding: 26px 22px;
+  text-align: center;
+
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.22);
+  box-shadow: 0 30px 90px rgba(0,0,0,.40);
+  backdrop-filter: blur(22px) saturate(160%);
+  -webkit-backdrop-filter: blur(22px) saturate(160%);
+}
+
+.splash__kicker{
+  color: rgba(255,255,255,.78);
+  letter-spacing: 3px;
+  font-weight: 900;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+.splash__title{
+  font-weight: 1000;
+  font-size: 54px;
+  letter-spacing: 3px;
+  margin: 0;
+  color: rgba(255, 60, 90, 1);
+  text-shadow: 0 0 22px rgba(255, 60, 90, .35);
+}
+.splash__sub{
+  margin-top: 10px;
+  color: rgba(255,255,255,.78);
+  font-weight: 800;
+}
+.splash__btn{
+  margin-top: 18px;
+  width: min(340px, 100%);
+}
+
+/* ===== Tabbar ===== */
+.tabbar{
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 0;
+  width: 100%;
+  max-width: 1100px;
+  z-index: 1000;
+
+  display: flex;
+  justify-content: space-around;
+  gap: 8px;
+  padding: 10px 10px calc(10px + env(safe-area-inset-bottom));
+
+  background: rgba(0,0,0,.35);
+  border-top: 1px solid rgba(255,255,255,.16);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.tabbar__btn{
+  flex: 1;
+  border: 0;
+  border-radius: 14px;
+  padding: 10px 10px;
+  cursor: pointer;
+
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.74);
+  font-weight: 900;
+}
+
+.tabbar__btn.is-active{
+  background: rgba(4,151,167,.18);
+  border-color: rgba(4,151,167,.40);
+  color: rgba(4,151,167,1);
+  box-shadow: 0 0 18px rgba(4,151,167,.18);
+}
+
+/* Mobile: tabbar más compacta */
+@media (max-width: 520px){
+  .tabbar__btn{ font-size: 12px; padding: 10px 8px; }
+}
 
 
 
