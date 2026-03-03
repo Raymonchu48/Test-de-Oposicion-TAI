@@ -1010,3 +1010,45 @@ setupCoach();
     addMsg("bot", 'Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.');
   }
 })();
+// ===== Navegación tipo app (SPA) =====
+(function initSpaNav(){
+  const splash = document.getElementById("splash");
+  const enterApp = document.getElementById("enterApp");
+  const tabbar = document.getElementById("tabbar");
+  const pages = Array.from(document.querySelectorAll(".page"));
+
+  function showPage(name){
+    pages.forEach(p => p.classList.toggle("is-active", p.dataset.page === name));
+    tabbar?.querySelectorAll(".tabbar__btn")
+      .forEach(b => b.classList.toggle("is-active", b.dataset.page === name));
+    // Scroll arriba al cambiar
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // Splash: recordar que ya entró
+  const seen = localStorage.getItem("opostudy_seen_splash") === "1";
+  if (seen && splash) splash.classList.add("is-hidden");
+
+  enterApp?.addEventListener("click", () => {
+    localStorage.setItem("opostudy_seen_splash", "1");
+    splash?.classList.add("is-hidden");
+    showPage("dashboard");
+  });
+
+  tabbar?.addEventListener("click", (e) => {
+    const btn = e.target.closest(".tabbar__btn[data-page]");
+    if (!btn) return;
+    showPage(btn.dataset.page);
+  });
+
+  // Botón “Abrir test” desde tab Tests (si existe tu modal)
+  const openFromTab = document.getElementById("openTestFromTab");
+  openFromTab?.addEventListener("click", () => {
+    // reutiliza tu flujo existente
+    startTest();
+  });
+
+  // Default
+  showPage("dashboard");
+})();
+
