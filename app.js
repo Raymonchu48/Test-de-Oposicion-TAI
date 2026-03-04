@@ -1,630 +1,1010 @@
-:root{
-  --accent:#0497a7;
-  --accent2:#057f8c;
+// OpoStudy · app.js (SPA + Supabase + Tests + Temario + Coach Drawer + PWA install)
 
-  --neon:#ff3c5a;             /* rojo “banner” */
-  --text:#ffffff;
-  --muted:rgba(255,255,255,.78);
+const { createClient } = window.supabase;
 
-  --glass: rgba(255,255,255,.10);
-  --glass2: rgba(255,255,255,.06);
-  --border: rgba(255,255,255,.22);
+const sb = createClient(
+  window.OPOSTUDY_CONFIG.SUPABASE_URL,
+  window.OPOSTUDY_CONFIG.SUPABASE_ANON_KEY
+);
 
-  --shadow: 0 22px 70px rgba(0,0,0,.26);
-  --r: 18px;
-
-  --navH: 64px;
+// Mermaid (si usas diagramas en prácticos)
+if (window.mermaid) {
+  mermaid.initialize({ startOnLoad: false, theme: "neutral" });
 }
 
-/* reset */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  color: var(--text);
+/* =========================
+   Storage
+========================= */
+const STORAGE_KEY = "opostudy_stats_v2";
+const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
+const STORAGE_TEMARIO_DONE = "opostudy_temario_done_v1";
 
-  background: url("./bg-datacenter.webp") center/cover no-repeat fixed;
-  background-color:#061a24;
+const MISTAKES_LOOKBACK_DAYS = 30;
+
+/* =========================
+   Navigation (screens)
+========================= */
+const screens = Array.from(document.querySelectorAll(".screen"));
+const navBtns = Array.from(document.querySelectorAll("[data-nav]"));
+const goBtns = Array.from(document.querySelectorAll("[data-go]"));
+
+function showScreen(name) {
+  screens.forEach(s => s.classList.toggle("is-active", s.dataset.screen === name));
+  navBtns.forEach(b => b.classList.toggle("is-active", b.dataset.nav === name));
+
+  // Coach FAB solo en Home
+  const coachFab = document.getElementById("coachFab");
+  if (coachFab) coachFab.style.display = (name === "home") ? "inline-flex" : "none";
+
+  // si sales de home, cierro drawer para no “romper” móvil
+  if (name !== "home") closeCoach();
 }
 
-@supports (-webkit-touch-callout: none){
-  body{ background-attachment: scroll; }
+navBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.nav)));
+goBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.go)));
+
+/* =========================
+   Stats + Mistakes
+========================= */
+function loadStats() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) {
+    return {
+      totalAnswered: 0,
+      totalCorrect: 0,
+      streakDays: 0,
+      lastStudyDate: null,
+      byBlock: { "1": { a: 0, c: 0 }, "2": { a: 0, c: 0 }, "3": { a: 0, c: 0 }, "4": { a: 0, c: 0 } }
+    };
+  }
+  try { return JSON.parse(raw); } catch { return null; }
 }
 
-/* overlay tint general */
-body::before{
-  content:"";
-  position:fixed;
-  inset:0;
-  z-index:-1;
-  pointer-events:none;
-  background: linear-gradient(
-    180deg,
-    rgba(0, 40, 60, .22) 0%,
-    rgba(0, 40, 60, .16) 55%,
-    rgba(0, 40, 60, .20) 100%
+function saveStats(stats) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+}
+
+function loadMistakes() {
+  const raw = localStorage.getItem(STORAGE_MISTAKES_KEY);
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch { return []; }
+}
+
+function saveMistakes(list) {
+  localStorage.setItem(STORAGE_MISTAKES_KEY, JSON.stringify(list));
+}
+
+function upsertMistake(questionId, block, topic) {
+  const list = loadMistakes();
+  const now = new Date().toISOString();
+
+  const idx = list.findIndex(m => m.id === questionId && !m.resolved_at);
+  if (idx >= 0) {
+    list[idx].wrong_count = (list[idx].wrong_count || 1) + 1;
+    list[idx].last_seen = now;
+  } else {
+    list.push({
+      id: questionId,
+      block,
+      topic,
+      wrong_count: 1,
+      first_seen: now,
+      last_seen: now,
+      resolved_at: null
+    });
+  }
+
+  saveMistakes(list);
+}
+
+function resolveMistake(questionId) {
+  const list = loadMistakes();
+  const now = new Date().toISOString();
+  const idx = list.findIndex(m => m.id === questionId && !m.resolved_at);
+  if (idx >= 0) {
+    list[idx].resolved_at = now;
+    saveMistakes(list);
+  }
+}
+
+function getPendingMistakeIds({ block = null, lookbackDays = MISTAKES_LOOKBACK_DAYS } = {}) {
+  const list = loadMistakes();
+  const now = Date.now();
+  const maxAgeMs = lookbackDays * 24 * 60 * 60 * 1000;
+
+  return list
+    .filter(m => !m.resolved_at)
+    .filter(m => (block ? Number(m.block) === Number(block) : true))
+    .filter(m => {
+      const t = Date.parse(m.last_seen || m.first_seen || "");
+      if (!Number.isFinite(t)) return true;
+      return (now - t) <= maxAgeMs;
+    })
+    .map(m => m.id);
+}
+
+function getPendingMistakesCount(block = null) {
+  return getPendingMistakeIds({ block }).length;
+}
+
+function updateStatsOnAnswer(stats, block, isCorrect) {
+  stats.totalAnswered++;
+  if (isCorrect) stats.totalCorrect++;
+
+  // byBlock
+  const b = String(block);
+  if (!stats.byBlock[b]) stats.byBlock[b] = { a: 0, c: 0 };
+  stats.byBlock[b].a++;
+  if (isCorrect) stats.byBlock[b].c++;
+
+  // streak
+  const today = new Date();
+  const ymd = today.toISOString().slice(0, 10);
+  if (!stats.lastStudyDate) stats.streakDays = 1;
+  else if (stats.lastStudyDate !== ymd) {
+    const last = new Date(stats.lastStudyDate + "T00:00:00Z");
+    const diffDays = Math.floor((today - last) / (1000 * 60 * 60 * 24));
+    stats.streakDays = (diffDays === 1) ? (stats.streakDays + 1) : 1;
+  }
+  stats.lastStudyDate = ymd;
+
+  saveStats(stats);
+}
+
+/* Render KPIs */
+const stats = loadStats();
+
+function renderKpis() {
+  const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
+  const pending = getPendingMistakesCount(null);
+
+  // Home
+  setText("kpiAnsweredHome", stats.totalAnswered);
+  setText("kpiAccuracyHome", `${acc}%`);
+  setText("kpiStreakHome", stats.streakDays);
+  setText("kpiMistakesHome", pending);
+
+  // Stats screen
+  setText("kpiAnsweredStats", stats.totalAnswered);
+  setText("kpiAccuracyStats", `${acc}%`);
+  setText("kpiStreakStats", stats.streakDays);
+  setText("kpiMistakesStats", pending);
+
+  renderBlockBars();
+}
+
+function renderBlockBars() {
+  const el = document.getElementById("blockBars");
+  if (!el) return;
+  const blocks = ["1","2","3","4"].map(b => {
+    const a = stats.byBlock?.[b]?.a || 0;
+    const c = stats.byBlock?.[b]?.c || 0;
+    const pct = a ? Math.round((c/a)*100) : 0;
+    return { b, pct, a, c };
+  });
+
+  el.innerHTML = blocks.map(x => `
+    <div class="bar">
+      <div class="bar__top">
+        <div class="bar__name">Bloque ${x.b}</div>
+        <div class="bar__pct">${x.pct}%</div>
+      </div>
+      <div class="bar__track">
+        <div class="bar__fill" style="width:${x.pct}%;"></div>
+      </div>
+      <div class="hint" style="margin-top:8px;">${x.c}/${x.a} correctas</div>
+    </div>
+  `).join("");
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(val);
+}
+
+/* Reset buttons */
+document.getElementById("resetStats")?.addEventListener("click", () => {
+  if (!confirm("¿Resetear stats locales?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  location.reload();
+});
+document.getElementById("resetMistakes")?.addEventListener("click", () => {
+  if (!confirm("¿Resetear fallos locales?")) return;
+  localStorage.removeItem(STORAGE_MISTAKES_KEY);
+  renderKpis();
+});
+
+/* =========================
+   Tests (modal)
+========================= */
+const modeSegment = document.getElementById("modeSegment");
+const practiceKindWrap = document.getElementById("practiceKindWrap");
+const practiceKindSegment = document.getElementById("practiceKindSegment");
+const blockSelect = document.getElementById("blockSelect");
+const countSelect = document.getElementById("countSelect");
+const timerToggle = document.getElementById("timerToggle");
+const startBtn = document.getElementById("startBtn");
+const blockHint = document.getElementById("blockHint");
+
+const state = {
+  mode: "exam",                 // exam | full | practice | mistakes
+  practiceKind: "practical",    // practical | test
+  block: null,
+  count: 15,
+  timerEnabled: true,
+
+  questions: [],
+  index: 0,
+  selected: null,
+  answers: [],
+  timeElapsed: 0,
+  timer: null,
+
+  examHardMode: false,          // para simulacro
+};
+
+function initTestsUI() {
+  state.count = Number(countSelect?.value || 15);
+  state.timerEnabled = !!timerToggle?.checked;
+
+  modeSegment?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-mode]");
+    if (!btn) return;
+    setMode(btn.dataset.mode);
+  });
+
+  practiceKindSegment?.addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-kind]");
+    if (!btn) return;
+    state.practiceKind = btn.dataset.kind;
+    practiceKindSegment.querySelectorAll(".segmented__btn").forEach(b => {
+      b.classList.toggle("is-active", b.dataset.kind === state.practiceKind);
+    });
+  });
+
+  blockSelect?.addEventListener("change", () => {
+    state.block = blockSelect.value ? Number(blockSelect.value) : null;
+    syncStartEnabled();
+  });
+
+  countSelect?.addEventListener("change", () => {
+    state.count = Number(countSelect.value);
+  });
+
+  timerToggle?.addEventListener("change", () => {
+    state.timerEnabled = !!timerToggle.checked;
+  });
+
+  startBtn?.addEventListener("click", () => startTest());
+
+  setMode("exam", { silent: true });
+  syncStartEnabled();
+}
+
+function setMode(mode, opts = {}) {
+  state.mode = mode;
+
+  document.querySelectorAll("#modeSegment .segmented__btn").forEach(b => {
+    b.classList.toggle("is-active", b.dataset.mode === mode);
+  });
+
+  if (practiceKindWrap) {
+    practiceKindWrap.style.display = (mode === "practice") ? "block" : "none";
+  }
+
+  if (mode === "full") {
+    blockSelect.value = "";
+    state.block = null;
+    blockSelect.disabled = true;
+    blockHint.style.display = "block";
+    blockHint.textContent = "En modo “Completo” no hace falta elegir bloque.";
+  } else if (mode === "mistakes") {
+    blockSelect.disabled = false;
+    blockHint.style.display = "block";
+    blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
+  } else {
+    blockSelect.disabled = false;
+    blockHint.style.display = "none";
+  }
+
+  if (!opts.silent) {
+    if (mode === "full" && Number(countSelect.value) < 30) {
+      countSelect.value = "30";
+      state.count = 30;
+    }
+    if ((mode === "exam" || mode === "practice") && Number(countSelect.value) > 15) {
+      countSelect.value = "15";
+      state.count = 15;
+    }
+  }
+
+  syncStartEnabled();
+}
+
+function syncStartEnabled() {
+  if (!startBtn) return;
+
+  let ok = false;
+  if (state.mode === "full") ok = true;
+  else if (state.mode === "mistakes") ok = getPendingMistakesCount(state.block ? Number(state.block) : null) > 0;
+  else ok = !!state.block;
+
+  startBtn.disabled = !ok;
+}
+
+/* Fetchers */
+async function fetchQuestions({ mode, block, count }) {
+  const params = {
+    p_count: Number(count),
+    p_block: mode === "full" ? null : Number(block),
+    p_topic: null,
+  };
+
+  const { data, error } = await sb.rpc("get_random_questions", params);
+  if (error) throw error;
+
+  return (data || []).map(q => ({
+    id: q.id,
+    block: q.block,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    statement: q.statement,
+    options: normalizeOptions(q.options),
+    correctIndex: q.correct_index,
+    explanation: q.explanation || "",
+    reference: q.reference || "",
+  }));
+}
+
+async function fetchMistakeQuestions() {
+  const ids = getPendingMistakeIds({ block: state.block ? Number(state.block) : null });
+  if (!ids.length) return [];
+
+  const take = Math.min(Number(state.count), ids.length);
+  const chosenIds = shuffleArray(ids).slice(0, take);
+
+  const { data, error } = await sb.from("questions").select("*").in("id", chosenIds);
+  if (error) throw error;
+
+  return shuffleArray(data || []).map(q => ({
+    id: q.id,
+    block: q.block,
+    topic: q.topic,
+    difficulty: q.difficulty,
+    statement: q.statement,
+    options: normalizeOptions(q.options),
+    correctIndex: q.correct_index,
+    explanation: q.explanation || "",
+    reference: q.reference || "",
+  }));
+}
+
+async function startPractical() {
+  if (!state.block) {
+    alert("Selecciona un bloque para ver el trabajo práctico.");
+    return;
+  }
+
+  const { data, error } = await sb.rpc("get_random_practicals", {
+    p_count: 1,
+    p_block: Number(state.block),
+    p_topic: null
+  });
+
+  if (error) throw error;
+  if (!data || !data.length) {
+    alert("No hay prácticos cargados para ese bloque todavía.");
+    return;
+  }
+
+  openModal();
+  renderPractical(data[0]);
+}
+
+async function startTest() {
+  try {
+    state.examHardMode = false;
+
+    if (state.mode === "practice" && state.practiceKind === "practical") {
+      await startPractical();
+      return;
+    }
+
+    let data = [];
+    if (state.mode === "mistakes") data = await fetchMistakeQuestions();
+    else data = await fetchQuestions({ mode: state.mode, block: state.block, count: state.count });
+
+    if (!data.length) {
+      alert("No hay preguntas disponibles para esa selección.");
+      return;
+    }
+
+    state.questions = data;
+    state.index = 0;
+    state.selected = null;
+    state.answers = [];
+    state.timeElapsed = 0;
+
+    openModal();
+    renderQuestion();
+    startTimerIfNeeded();
+  } catch (e) {
+    console.error(e);
+    alert("Error: " + (e?.message || JSON.stringify(e)));
+  }
+}
+
+/* Simulacro (Exam) */
+document.getElementById("startExam")?.addEventListener("click", async () => {
+  try {
+    state.examHardMode = true;
+    state.mode = "exam";
+
+    const examBlock = document.getElementById("examBlock")?.value || "";
+    const blk = examBlock ? Number(examBlock) : null;
+
+    const data = await fetchQuestions({ mode: blk ? "exam" : "full", block: blk || 1, count: 60 });
+    if (!data.length) return alert("No hay preguntas para el simulacro.");
+
+    state.questions = data;
+    state.index = 0;
+    state.selected = null;
+    state.answers = [];
+    state.timeElapsed = 0;
+
+    openModal();
+    renderQuestion();
+    startTimerIfNeeded(60 * 60); // 60 min
+  } catch (e) {
+    console.error(e);
+    alert("Error simulacro: " + (e?.message || JSON.stringify(e)));
+  }
+});
+
+/* Modal UI */
+let modalEl = null;
+
+function ensureModal() {
+  if (modalEl) return modalEl;
+
+  modalEl = document.createElement("div");
+  modalEl.className = "modal";
+  modalEl.innerHTML = `
+    <div class="modal__backdrop" data-close="1"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Test OpoStudy">
+      <div class="quiz">
+        <div class="quiz__top">
+          <div class="quiz__meta">
+            <div class="quiz__title">Test</div>
+            <div class="quiz__sub" id="quizSub">Cargando...</div>
+          </div>
+          <div class="quiz__right">
+            <div class="quiz__timer" id="quizTimer">00:00</div>
+            <button class="btn btn--ghost btn--small" id="quizCloseBtn" type="button">Salir</button>
+          </div>
+        </div>
+
+        <div class="quiz__progress">
+          <div class="quiz__bar"><div class="quiz__barFill" id="quizBarFill" style="width:0%"></div></div>
+        </div>
+
+        <div class="quiz__body" id="quizBody">
+          <div class="quiz__q" id="quizQuestion"></div>
+          <div class="quiz__opts" id="quizOptions"></div>
+          <div class="quiz__explain" id="quizExplain" style="display:none;"></div>
+        </div>
+
+        <div class="quiz__footer">
+          <button class="btn btn--ghost" id="quizPrev" type="button">Anterior</button>
+          <button class="btn btn--primary" id="quizNext" type="button" disabled>Siguiente</button>
+        </div>
+
+        <div class="quiz__results" id="quizResults" style="display:none;"></div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modalEl);
+
+  modalEl.addEventListener("click", (e) => {
+    if (e.target?.dataset?.close) closeModal();
+  });
+  modalEl.querySelector("#quizCloseBtn").addEventListener("click", () => closeModal());
+
+  modalEl.querySelector("#quizPrev").addEventListener("click", () => goPrev());
+  modalEl.querySelector("#quizNext").addEventListener("click", () => goNext());
+
+  return modalEl;
+}
+
+function openModal() {
+  ensureModal();
+  modalEl.classList.add("is-open");
+  document.body.classList.add("no-scroll");
+  // re-habilitar botones de test por si venimos de práctico
+  modalEl.querySelector("#quizPrev").style.display = "";
+  modalEl.querySelector("#quizNext").style.display = "";
+}
+
+function closeModal() {
+  stopTimer();
+  if (!modalEl) return;
+  modalEl.classList.remove("is-open");
+  document.body.classList.remove("no-scroll");
+}
+
+function renderQuestion() {
+  const q = state.questions[state.index];
+
+  const resultsEl = modalEl.querySelector("#quizResults");
+  resultsEl.style.display = "none";
+  const bodyEl = modalEl.querySelector("#quizBody");
+  bodyEl.style.display = "block";
+
+  modalEl.querySelector("#quizSub").textContent =
+    `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
+
+  modalEl.querySelector("#quizQuestion").textContent = q.statement;
+
+  const optsEl = modalEl.querySelector("#quizOptions");
+  optsEl.innerHTML = "";
+
+  state.selected = null;
+  modalEl.querySelector("#quizNext").disabled = true;
+
+  q.options.forEach((text, i) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "opt";
+    btn.dataset.index = String(i);
+    btn.innerHTML = `
+      <span class="opt__key">${String.fromCharCode(65 + i)}</span>
+      <span class="opt__text"></span>
+    `;
+    btn.querySelector(".opt__text").textContent = text;
+
+    btn.addEventListener("click", () => selectOption(i));
+    optsEl.appendChild(btn);
+  });
+
+  const pct = (state.index / state.questions.length) * 100;
+  modalEl.querySelector("#quizBarFill").style.width = `${pct}%`;
+
+  modalEl.querySelector("#quizPrev").disabled = state.index === 0;
+
+  const ex = modalEl.querySelector("#quizExplain");
+  ex.style.display = "none";
+  ex.textContent = "";
+}
+
+function selectOption(i) {
+  const q = state.questions[state.index];
+  state.selected = i;
+
+  modalEl.querySelectorAll(".opt").forEach((b) => {
+    b.classList.toggle("is-selected", Number(b.dataset.index) === i);
+    b.classList.remove("is-correct", "is-wrong");
+  });
+
+  const showImmediateCorrection =
+    (state.mode === "practice" && state.practiceKind === "test") &&
+    !state.examHardMode;
+
+  if (showImmediateCorrection) {
+    modalEl.querySelectorAll(".opt").forEach((b) => {
+      const idx = Number(b.dataset.index);
+      if (idx === q.correctIndex) b.classList.add("is-correct");
+      if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
+    });
+
+    const ex = modalEl.querySelector("#quizExplain");
+    ex.style.display = "block";
+    ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
+  }
+
+  modalEl.querySelector("#quizNext").disabled = false;
+}
+
+function goPrev() {
+  if (state.index <= 0) return;
+  state.index--;
+  renderQuestion();
+}
+
+function goNext() {
+  if (state.selected === null) return;
+
+  const q = state.questions[state.index];
+  const isCorrect = state.selected === q.correctIndex;
+
+  if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
+  else if (state.mode === "mistakes") resolveMistake(q.id);
+
+  state.answers.push({
+    id: q.id,
+    block: q.block,
+    topic: q.topic,
+    selected: state.selected,
+    correct: q.correctIndex,
+    isCorrect,
+  });
+
+  updateStatsOnAnswer(stats, q.block, isCorrect);
+
+  state.index++;
+
+  if (state.index >= state.questions.length) finishTest();
+  else renderQuestion();
+
+  renderKpis();
+}
+
+function finishTest() {
+  stopTimer();
+
+  const correct = state.answers.filter(a => a.isCorrect).length;
+  const total = state.answers.length;
+  const pct = total ? Math.round((correct / total) * 100) : 0;
+
+  const bodyEl = modalEl.querySelector("#quizBody");
+  bodyEl.style.display = "none";
+
+  const resultsEl = modalEl.querySelector("#quizResults");
+  resultsEl.style.display = "block";
+
+  const mm = String(Math.floor(state.timeElapsed / 60)).padStart(2, "0");
+  const ss = String(state.timeElapsed % 60).padStart(2, "0");
+
+  resultsEl.innerHTML = `
+    <div class="res">
+      <div class="res__score">${pct}%</div>
+      <div class="res__line">Correctas: <strong>${correct}</strong> · Incorrectas: <strong>${total - correct}</strong> · Tiempo: <strong>${mm}:${ss}</strong></div>
+      <div class="res__actions">
+        <button class="btn btn--ghost" id="resClose" type="button">Cerrar</button>
+        <button class="btn btn--primary" id="resAgain" type="button">Repetir</button>
+      </div>
+    </div>
+  `;
+
+  modalEl.querySelector("#quizBarFill").style.width = "100%";
+  resultsEl.querySelector("#resClose").addEventListener("click", () => closeModal());
+  resultsEl.querySelector("#resAgain").addEventListener("click", () => startTest());
+}
+
+function startTimerIfNeeded(maxSeconds = null) {
+  stopTimer();
+  modalEl.querySelector("#quizTimer").textContent = "00:00";
+
+  if (!state.timerEnabled && !state.examHardMode) return;
+
+  state.timer = setInterval(() => {
+    state.timeElapsed++;
+
+    if (maxSeconds && state.timeElapsed >= maxSeconds) {
+      finishTest();
+      return;
+    }
+
+    const mm = String(Math.floor(state.timeElapsed / 60)).padStart(2, "0");
+    const ss = String(state.timeElapsed % 60).padStart(2, "0");
+    modalEl.querySelector("#quizTimer").textContent = `${mm}:${ss}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (state.timer) clearInterval(state.timer);
+  state.timer = null;
+}
+
+function normalizeOptions(opts) {
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === "string") {
+    try { return JSON.parse(opts); } catch { return [opts]; }
+  }
+  return [];
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Practicals */
+function renderPractical(p) {
+  const bodyEl = modalEl.querySelector("#quizBody");
+  const resultsEl = modalEl.querySelector("#quizResults");
+  resultsEl.style.display = "none";
+  bodyEl.style.display = "block";
+
+  modalEl.querySelector("#quizSub").textContent =
+    `Trabajo práctico · Bloque ${p.block} · Tema ${p.topic} · Tipo: ${p.type}`;
+
+  modalEl.querySelector("#quizQuestion").textContent = p.title || "Trabajo práctico";
+
+  const optsEl = modalEl.querySelector("#quizOptions");
+  optsEl.innerHTML = `
+    <div class="practical">
+      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt || "").replaceAll("\n","<br>")}</div>
+      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n","<br>")}</div>
+
+      <label class="label" style="margin-top:14px;">Tu respuesta</label>
+      <textarea id="practicalAnswer" class="textarea" rows="8" placeholder="Escribe aquí tu solución..."></textarea>
+
+      <div class="practical__actions">
+        <button class="btn btn--ghost" id="savePractical" type="button">Guardar</button>
+        <button class="btn btn--primary" id="showSolution" type="button">Ver guía</button>
+      </div>
+
+      <div id="solutionBox" class="practical__solution" style="display:none;"></div>
+    </div>
+  `;
+
+  // oculto navegación test
+  modalEl.querySelector("#quizPrev").style.display = "none";
+  modalEl.querySelector("#quizNext").style.display = "none";
+  modalEl.querySelector("#quizBarFill").style.width = "0%";
+
+  optsEl.querySelector("#savePractical").onclick = () => {
+    alert("Guardado (local).");
+  };
+
+  optsEl.querySelector("#showSolution").onclick = () => {
+    const box = optsEl.querySelector("#solutionBox");
+    box.style.display = "block";
+    box.innerHTML = `<strong>Guía</strong><br>${escapeHtml(p.solution || "Sin guía todavía.").replaceAll("\n","<br>")}`;
+    // Mermaid opcional
+    if (p.assets?.mermaid && window.mermaid) {
+      const id = "mmd_" + Math.random().toString(16).slice(2);
+      box.innerHTML += `<div class="mermaid" id="${id}">${escapeHtml(p.assets.mermaid)}</div>`;
+      try { mermaid.run({ querySelector: `#${id}` }); } catch {}
+    }
+  };
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* =========================
+   Temario (Supabase)
+   Nota: usamos ord para ordenar (evita error order_in_topic)
+========================= */
+let syllabusCache = [];
+let temarioDone = loadTemarioDone();
+
+function loadTemarioDone() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_TEMARIO_DONE) || "{}"); }
+  catch { return {}; }
+}
+function saveTemarioDone() {
+  localStorage.setItem(STORAGE_TEMARIO_DONE, JSON.stringify(temarioDone));
+}
+
+async function loadTemario() {
+  const listEl = document.getElementById("temarioList");
+  if (!listEl) return;
+
+  listEl.textContent = "Cargando temario...";
+
+  const { data, error } = await sb
+    .from("syllabus_items")
+    .select("id,block,topic,title,detail,ord,tags")
+    .order("block", { ascending: true })
+    .order("topic", { ascending: true })
+    .order("ord", { ascending: true });
+
+  if (error) {
+    listEl.textContent = "Error cargando temario: " + error.message;
+    return;
+  }
+
+  syllabusCache = data || [];
+  renderTemario();
+}
+
+function renderTemario() {
+  const listEl = document.getElementById("temarioList");
+  const sel = document.getElementById("temarioBlock");
+  const q = (document.getElementById("temarioSearch")?.value || "").trim().toLowerCase();
+
+  const block = sel?.value ? Number(sel.value) : null;
+
+  let items = [...syllabusCache];
+  if (block) items = items.filter(x => Number(x.block) === block);
+  if (q) items = items.filter(x =>
+    (x.title || "").toLowerCase().includes(q) ||
+    String(x.topic || "").includes(q) ||
+    (x.detail || "").toLowerCase().includes(q)
   );
+
+  const total = items.length;
+  const done = items.filter(x => !!temarioDone[x.id]).length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+
+  const pctEl = document.getElementById("temarioPct");
+  const fillEl = document.getElementById("temarioFill");
+  if (pctEl) pctEl.textContent = `${pct}% completado`;
+  if (fillEl) fillEl.style.width = `${pct}%`;
+
+  if (!items.length) {
+    listEl.textContent = "No hay elementos para ese filtro.";
+    return;
+  }
+
+  listEl.innerHTML = items.map(x => {
+    const checked = temarioDone[x.id] ? "checked" : "";
+    const title = escapeHtml(x.title || "");
+    const meta = `Bloque ${x.block} · Tema ${x.topic}`;
+    const detail = escapeHtml(x.detail || "");
+    return `
+      <div class="tema ${temarioDone[x.id] ? "is-done" : ""}" data-id="${x.id}">
+        <input class="tema__check" type="checkbox" ${checked} aria-label="Marcar completado">
+        <div>
+          <div class="tema__title">${title}</div>
+          <div class="tema__meta">${meta}</div>
+          <div class="tema__detail">${detail || ""}</div>
+        </div>
+        <div class="tema__actions">
+          <button class="btn btn--ghost btn--small tema__toggle" type="button">Ver</button>
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  // Listeners
+  listEl.querySelectorAll(".tema").forEach(row => {
+    const id = row.dataset.id;
+    row.querySelector(".tema__check").addEventListener("change", (e) => {
+      temarioDone[id] = !!e.target.checked;
+      saveTemarioDone();
+      renderTemario();
+    });
+    row.querySelector(".tema__toggle").addEventListener("click", () => {
+      row.classList.toggle("is-open");
+    });
+  });
 }
 
-/* Header */
-.topbar--banner{
-  position: sticky;
-  top:0;
-  z-index:10;
+document.getElementById("temarioBlock")?.addEventListener("change", renderTemario);
+document.getElementById("temarioSearch")?.addEventListener("input", renderTemario);
+
+/* =========================
+   Coach Drawer (right slide)
+========================= */
+const coachFab = document.getElementById("coachFab");
+const coachDrawer = document.getElementById("coachDrawer");
+const coachClose = document.getElementById("coachClose");
+const coachSend = document.getElementById("coachSend");
+const coachClear = document.getElementById("coachClear");
+const coachInput = document.getElementById("coachInput");
+const coachLog = document.getElementById("coachLog");
+
+function openCoach() {
+  if (!coachDrawer) return;
+  coachDrawer.classList.add("is-open");
+  coachDrawer.setAttribute("aria-hidden", "false");
+  setTimeout(() => coachInput?.focus(), 50);
 }
-.topbar__banner{
-  width:100%;
-  height:auto;
-  display:block;
+function closeCoach() {
+  if (!coachDrawer) return;
+  coachDrawer.classList.remove("is-open");
+  coachDrawer.setAttribute("aria-hidden", "true");
 }
-.topbar__install{
-  position:absolute;
-  top:14px;
-  right:18px;
-  z-index:2;
-  background: rgba(255,255,255,.78);
-  border: 1px solid rgba(0,0,0,.12);
-  backdrop-filter: blur(8px);
+coachFab?.addEventListener("click", openCoach);
+coachClose?.addEventListener("click", closeCoach);
+coachDrawer?.addEventListener("click", (e) => {
+  if (e.target?.dataset?.coachClose) closeCoach();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closeCoach();
+});
+
+function coachAdd(role, text) {
+  if (!coachLog) return;
+  const wrap = document.createElement("div");
+  wrap.className = `coach__msg ${role === "me" ? "coach__msg--me" : "coach__msg--bot"}`;
+  wrap.innerHTML = `<div class="coach__bubble">${escapeHtml(text)}</div>`;
+  coachLog.appendChild(wrap);
+  coachLog.scrollTop = coachLog.scrollHeight;
 }
 
-/* sr-only */
-.sr-only{
-  position:absolute;
-  width:1px;height:1px;
-  padding:0;margin:-1px;
-  overflow:hidden;clip:rect(0,0,0,0);
-  white-space:nowrap;border:0;
+function coachReply(input) {
+  const t = input.trim().toLowerCase();
+
+  if (!t || t === "ayuda") {
+    coachAdd("bot", "Dime qué necesitas: “fallos”, “plan”, “bloque 1/2/3/4” o “tiempo”.");
+    return;
+  }
+
+  if (t.includes("fallo")) {
+    const pending = getPendingMistakesCount(null);
+    const b1 = getPendingMistakesCount(1);
+    const b2 = getPendingMistakesCount(2);
+    const b3 = getPendingMistakesCount(3);
+    const b4 = getPendingMistakesCount(4);
+    coachAdd("bot", `Tienes ${pending} fallos pendientes. B1:${b1} · B2:${b2} · B3:${b3} · B4:${b4}. Recomendación: repasa primero el bloque con más fallos y haz 15 preguntas.`);
+    return;
+  }
+
+  if (t.includes("plan")) {
+    const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
+    coachAdd("bot",
+      `Plan rápido (20–30 min):\n1) 10 preguntas (bloque flojo)\n2) 5 repaso de fallos\n3) 5 preguntas mixtas.\nTu acierto actual: ${acc}%. Objetivo hoy: +3%.`
+    );
+    return;
+  }
+
+  if (t.includes("tiempo")) {
+    coachAdd("bot", "Regla examen: 60 preguntas / 60 min ≈ 60s por pregunta. En entreno: 75–90s al principio, bajando a 60s cuando estés estable.");
+    return;
+  }
+
+  const m = t.match(/bloque\s*(\d)/);
+  if (m) {
+    const b = Number(m[1]);
+    coachAdd("bot", `Enfoque Bloque ${b}: 15 preguntas + repaso de fallos del bloque. Si tu acierto cae <70%, cambia a práctica (con corrección) 1 sesión.`);
+    return;
+  }
+
+  coachAdd("bot", "No te pillo. Prueba: “fallos”, “plan”, “bloque 2”, “tiempo”.");
 }
 
-/* App + screens */
-.app{
-  max-width: 1150px;
-  margin: 0 auto;
-  padding: 18px 18px calc(var(--navH) + 18px);
-}
-.screen{ display:none; }
-.screen.is-active{ display:block; }
-
-/* Grid layout */
-.grid{
-  display:grid;
-  grid-template-columns: 1.15fr .85fr;
-  gap:18px;
-  align-items:start;
-}
-.col{ display:flex; flex-direction:column; gap:18px; }
-
-@media (max-width: 980px){
-  .grid{ grid-template-columns: 1fr; }
+function sendCoach() {
+  const txt = (coachInput?.value || "").trim();
+  if (!txt) return;
+  coachAdd("me", txt);
+  coachInput.value = "";
+  coachReply(txt);
 }
 
-/* Cards glass */
-.card{
-  border-radius: var(--r);
-  border: 1px solid rgba(255,255,255,.10);
-  overflow:hidden;
-}
-.glass{
-  background: rgba(255,255,255,.00);
-  border: 1px solid rgba(255,255,255,.00);
+coachSend?.addEventListener("click", sendCoach);
+coachInput?.addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendCoach();
+});
+coachClear?.addEventListener("click", () => {
+  if (!coachLog) return;
+  coachLog.innerHTML = "";
+  coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
+});
 
-  backdrop-filter: blur(26px) saturate(120%);
-  -webkit-backdrop-filter: blur(26px) saturate(120%);
+/* =========================
+   PWA Install button (works)
+========================= */
+let deferredPrompt = null;
+const btnInstall = document.getElementById("btnInstall");
 
-  box-shadow: 0 22px 70px rgba(0,0,0,.18);
-}
-.card__title{
-  margin:0 0 14px;
-  padding-bottom:10px;
-  border-bottom:1px solid rgba(255,255,255,.14);
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (btnInstall) btnInstall.hidden = false;
+});
 
-  color: var(--neon);
-  font-weight: 900;
-  letter-spacing:.2px;
-  text-shadow: 0 0 18px rgba(255,60,90,.22);
-}
-.card{ padding: 18px; }
+btnInstall?.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  btnInstall.hidden = true;
+});
 
-.subhead{
-  margin:18px 0 10px;
-  color: rgba(255,255,255,.92);
-  font-weight:900;
-}
+/* =========================
+   Init
+========================= */
+initTestsUI();
+renderKpis();
+loadTemario();
 
-/* Controls */
-.field{ margin-bottom: 16px; }
-.label{
-  display:block;
-  margin-bottom:10px;
-  font-weight: 950;
-  color: rgba(255, 80, 110, .90);
-  text-shadow: 0 0 14px rgba(255, 60, 90, .18);
-}
+// Arranque coach mensaje
+coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
 
-.segmented,
-.select,
-.switch,
-.input{
-  background: rgba(255,255,255,.07);
-  border: 1px solid rgba(255,255,255,.22);
-  border-radius: 14px;
-  backdrop-filter: blur(22px) saturate(165%);
-  -webkit-backdrop-filter: blur(22px) saturate(165%);
-}
-
-.segmented{
-  display:flex;
-  gap:8px;
-  padding:6px;
-}
-
-.segmented__btn{
-  flex:1;
-  padding: 10px 10px;
-  border-radius: 12px;
-  border:0;
-  cursor:pointer;
-  background: transparent;
-
-  color: rgba(4,151,167,.92);
-  font-weight: 950;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18);
-}
-.segmented__btn.is-active{
-  color: rgba(4,151,167,1);
-  background: rgba(4,151,167,.14);
-  box-shadow: inset 0 0 0 1px rgba(4,151,167,.35), 0 0 18px rgba(4,151,167,.18);
-}
-
-.select{
-  width:100%;
-  min-height: 46px;
-  padding: 12px 14px;
-  color: rgba(255,255,255,.92);
-  font-weight: 900;
-  outline:none;
-}
-.select option{
-  background: #2b5162;
-  color: rgba(255,255,255,.92);
-}
-.select option:checked{
-  background: #356b80;
-  color: rgba(255,255,255,.98);
-}
-.select{ color-scheme: dark; }
-
-.input{
-  width:100%;
-  min-height:46px;
-  padding:12px 14px;
-  border-radius:14px;
-  color: rgba(255,255,255,.92);
-  outline:none;
-  font-weight:800;
-}
-.input::placeholder{ color: rgba(255,255,255,.50); }
-
-.grid2{
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:16px;
-}
-@media (max-width: 560px){
-  .grid2{ grid-template-columns:1fr; }
-}
-
-/* Switch */
-.switch{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding:10px 12px;
-}
-.switch input{ display:none; }
-.switch__ui{
-  width:48px;height:28px;border-radius:999px;
-  background: rgba(255,255,255,.10);
-  border: 1px solid rgba(255,255,255,.26);
-  position:relative;
-}
-.switch__ui::after{
-  content:"";
-  position:absolute; top:3px; left:3px;
-  width:22px;height:22px;border-radius:50%;
-  background: rgba(255,255,255,.95);
-  transition: transform .18s ease;
-}
-.switch input:checked + .switch__ui{
-  background: rgba(4,151,167,.55);
-  border-color: rgba(4,151,167,.55);
-  box-shadow: 0 0 18px rgba(4,151,167,.22);
-}
-.switch input:checked + .switch__ui::after{
-  transform: translateX(20px);
-}
-.switch__text{
-  color: rgba(255,255,255,.90);
-  font-weight: 900;
-  text-shadow: 0 10px 22px rgba(0,0,0,.18);
-}
-
-/* Buttons */
-.btn{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  border-radius: 14px;
-  border: 1px solid transparent;
-  padding: 12px 14px;
-  font-weight: 900;
-  cursor:pointer;
-  user-select:none;
-}
-.btn--primary{
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-  color:#fff;
-  box-shadow: 0 18px 40px rgba(0,0,0,.22);
-}
-.btn--ghost{
-  background: rgba(255,255,255,.12);
-  border: 1px solid rgba(255,255,255,.22);
-  color: rgba(255,255,255,.90);
-}
-.btn--small{ padding: 10px 12px; }
-
-/* Quick buttons */
-.quick{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
-.quick .btn{ min-width: 140px; }
-
-/* Hint motivation */
-.hint{
-  color: rgba(255,255,255,.78);
-  text-shadow: 0 10px 20px rgba(0,0,0,.18);
-}
-.hint--motivation{
-  display:flex;
-  gap:12px;
-  align-items:center;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-}
-.hint__avatar{
-  width:44px;height:44px;
-  border-radius: 14px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,.18);
-  box-shadow: 0 10px 22px rgba(0,0,0,.12);
-}
-
-/* Hero */
-.hero-card{ padding: 12px; }
-.hero-img{
-  width:100%;
-  height:260px;
-  display:block;
-  object-fit: cover;
-  border-radius: 16px;
-  border:1px solid rgba(255,255,255,.14);
-}
-
-/* KPI */
-.kpi-grid{
-  display:grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap:12px;
-}
-.kpi{
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  padding: 14px;
-}
-.kpi__num{
-  color: var(--neon);
-  font-weight: 950;
-  font-size: 1.65rem;
-  text-shadow: 0 0 18px rgba(255,60,90,.22);
-}
-.kpi__label{ color: rgba(255,255,255,.78); font-size: .88rem; }
-
-/* Plan */
-.plan__row{
-  display:flex;
-  justify-content:space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(255,255,255,.12);
-}
-.plan__row:last-child{ border-bottom:0; }
-.plan__row span{ color: rgba(255,255,255,.80); }
-.plan__row strong{
-  color: var(--neon);
-  text-shadow: 0 0 14px rgba(255,60,90,.18);
-}
-
-/* Temario */
-.temario-toolbar{
-  display:grid;
-  grid-template-columns: 220px 1fr 220px;
-  gap:14px;
-  align-items:end;
-}
-@media (max-width: 900px){
-  .temario-toolbar{ grid-template-columns: 1fr; }
-}
-.temario-progress{
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  padding: 12px 12px 10px;
-}
-.temario-progress__pct{
-  font-weight: 900;
-  color: rgba(255,255,255,.92);
-  margin-bottom: 8px;
-}
-.temario-progress__bar{
-  height: 8px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.10);
-  overflow:hidden;
-}
-.temario-progress__fill{
-  height:100%;
-  width:0%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-.temario-list{
-  margin-top:14px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
-}
-.tema{
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.05);
-  padding: 12px 12px;
-  display:flex;
-  align-items:flex-start;
-  gap:12px;
-}
-.tema__check{ margin-top:4px; }
-.tema__title{ font-weight: 900; color: rgba(255,255,255,.94); }
-.tema__meta{ color: rgba(255,255,255,.70); font-size: .85rem; margin-top:4px; }
-.tema__detail{ color: rgba(255,255,255,.80); margin-top:8px; display:none; }
-.tema.is-open .tema__detail{ display:block; }
-.tema__actions{ margin-left:auto; display:flex; gap:8px; }
-
-/* bars */
-.bars{ display:flex; flex-direction:column; gap:10px; margin-top:8px; }
-.bar{
-  border:1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.05);
-  border-radius: 14px;
-  padding: 10px 12px;
-}
-.bar__top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
-.bar__name{ font-weight:900; color: rgba(255,255,255,.92); }
-.bar__pct{ color: var(--neon); font-weight:950; }
-.bar__track{
-  height:8px;
-  border-radius:999px;
-  background: rgba(255,255,255,.10);
-  overflow:hidden;
-}
-.bar__fill{
-  height:100%;
-  width:0%;
-  background: linear-gradient(135deg, var(--accent), var(--accent2));
-}
-
-/* Pills */
-.pill{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:46px;
-  padding: 12px 14px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.22);
-  background: rgba(255,255,255,.06);
-  font-weight: 900;
-}
-
-/* Bottom nav */
-.bottom-nav{
-  position: fixed;
-  left:50%;
-  transform: translateX(-50%);
-  bottom: 0;
-  width: 100%;
-  max-width: 1150px;
-  height: var(--navH);
-  display:flex;
-  gap:10px;
-  padding: 10px 12px;
-  z-index: 20;
-
-  background: rgba(0,0,0,.22);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-top: 1px solid rgba(255,255,255,.10);
-}
-.nav__btn{
-  flex:1;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.88);
-  font-weight: 950;
-  cursor:pointer;
-}
-.nav__btn.is-active{
-  background: rgba(4,151,167,.18);
-  border-color: rgba(4,151,167,.35);
-  color: rgba(255,255,255,.96);
-}
-
-/* Coach FAB */
-.coach-fab{
-  position: fixed;
-  right: 16px;
-  bottom: calc(var(--navH) + 16px);
-  z-index: 30;
-
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.10);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-
-  cursor:pointer;
-}
-.coach-fab__img{
-  width: 36px; height: 36px;
-  border-radius: 14px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,.18);
-}
-.coach-fab__label{
-  font-weight: 950;
-  color: rgba(255,255,255,.92);
-}
-
-/* Coach drawer */
-.coach-drawer{
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display:none;
-}
-.coach-drawer.is-open{ display:block; }
-
-.coach-drawer__backdrop{
-  position:absolute;
-  inset:0;
-  background: rgba(0,0,0,.35);
-}
-
-.coach-drawer__panel{
-  position:absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: min(520px, 92vw);
-
-  transform: translateX(100%);
-  transition: transform .22s ease;
-
-  background: rgba(255,255,255,.06);
-  border-left: 1px solid rgba(255,255,255,.16);
-  backdrop-filter: blur(26px) saturate(140%);
-  -webkit-backdrop-filter: blur(26px) saturate(140%);
-
-  box-shadow: -20px 0 80px rgba(0,0,0,.22);
-  padding: 16px;
-}
-.coach-drawer.is-open .coach-drawer__panel{ transform: translateX(0); }
-
-.coach-drawer__head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255,255,255,.12);
-  margin-bottom: 12px;
-}
-.coach-drawer__who{ display:flex; gap:12px; align-items:center; }
-.coach-drawer__avatar{
-  width: 44px; height: 44px;
-  border-radius: 14px;
-  object-fit: cover;
-  border: 1px solid rgba(255,255,255,.18);
-}
-.coach-drawer__title{
-  font-weight: 950;
-  color: var(--neon);
-}
-.coach-drawer__sub{
-  font-size: .88rem;
-  color: rgba(255,255,255,.74);
-}
-
-/* Coach inner */
-.coach__log{
-  height: 48vh;
-  overflow:auto;
-  padding: 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(0,0,0,.10);
-}
-
-.coach__msg{ display:flex; gap:10px; margin: 10px 0; }
-.coach__bubble{
-  max-width: 90%;
-  padding: 10px 12px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.92);
-  line-height: 1.35;
-}
-.coach__msg--me{ justify-content:flex-end; }
-.coach__msg--me .coach__bubble{
-  background: rgba(4,151,167,.20);
-  border-color: rgba(4,151,167,.35);
-}
-
-.coach__composer{
-  display:flex;
-  gap:10px;
-  margin-top: 12px;
-}
-.coach__input{
-  flex:1;
-  min-height: 46px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,.18);
-  background: rgba(255,255,255,.06);
-  color: rgba(255,255,255,.92);
-  outline:none;
-  font-weight: 900;
-}
-.coach__input::placeholder{ color: rgba(255,255,255,.55); }
-.coach__send{ min-width: 110px; }
-
-.coach__actions{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-top:10px;
-}
-.coach__hint{
-  color: rgba(255,255,255,.70);
-  font-weight: 700;
-  font-size: .85rem;
-}
-
-/* Mobile tune */
-@media (max-width: 520px){
-  .quick .btn{ min-width: unset; flex:1; }
-  .coach__log{ height: 42vh; }
-}
+// Arrancar en Home
+showScreen("home");
