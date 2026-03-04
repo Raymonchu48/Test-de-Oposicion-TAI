@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>OpoStudy</title>
 
   <link rel="manifest" href="./manifest.json" />
@@ -14,83 +14,74 @@
 
   <link rel="stylesheet" href="./app.css?v=100" />
 </head>
-
 <body>
+
+  <!-- Header banner -->
   <header class="topbar topbar--banner">
     <h1 class="sr-only">OpoStudy · Preparación TAI · Tests inteligentes</h1>
     <img class="topbar__banner" src="./header-banner.png" alt="OpoStudy banner" />
     <button class="btn btn--ghost topbar__install" id="btnInstall" hidden>Instalar</button>
   </header>
 
-  <main class="app">
+  <!-- App -->
+  <main class="app" id="app">
     <!-- HOME -->
-    <section class="screen is-active" id="screen-home" aria-label="Inicio">
-      <div class="layout">
-        <section class="stack">
-          <section class="card">
+    <section class="screen is-active" id="screen-home" data-screen="home">
+      <div class="grid">
+        <div class="col">
+          <section class="card glass">
             <h2 class="card__title">Inicio</h2>
 
             <div class="hint hint--motivation" id="motivationHint">
               <img class="hint__avatar" src="./coach.png" alt="Coach" loading="lazy">
-              <span class="hint__text">
-                <strong>Enfócate: 15 preguntas.</strong> Prioriza precisión, revisa fallos y consolida tu conocimiento.
-              </span>
+              <div class="hint__text">
+                <strong>Enfócate: 15 preguntas.</strong>
+                Prioriza precisión, revisa fallos y consolida tu conocimiento.
+              </div>
             </div>
 
-            <div style="margin-top:14px;">
-              <button class="btn btn--primary" type="button" id="btnGoTests" style="width:100%; min-height:56px;">
-                Abrir Tests
-              </button>
-            </div>
-          </section>
-
-          <section class="card coach" id="coachCard">
-            <h2 class="card__title">Coach TAI</h2>
-
-            <div class="coach__log" id="coachLog" aria-live="polite"></div>
-
-            <div class="coach__composer">
-              <input class="coach__input" id="coachInput" type="text"
-                     placeholder="Escribe: 'fallos', 'plan', 'bloque 2', 'tiempo'..." autocomplete="off" />
-              <button class="btn btn--primary coach__send" id="coachSend" type="button">Enviar</button>
-            </div>
-
-            <div class="coach__actions">
-              <button class="btn btn--ghost btn--small" id="coachClear" type="button">Limpiar chat</button>
-              <span class="coach__hint">Tip: “fallos” (repaso) · “plan” (estrategia) · “bloque 2” (enfoque)</span>
-            </div>
-          </section>
-        </section>
-
-        <aside class="stack">
-          <section class="card hero-card" aria-label="Video temario">
-  <div class="hero-embed">
-    <iframe
-     src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1"
-      title="El Temario TAI"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen
-    ></iframe>
-  </div>
-</section>
-
-          <section class="card card--progress">
-            <h2 class="card__title">Progreso</h2>
-            <div class="kpi-grid">
-              <div class="kpi"><div class="kpi__num" id="kpiAnswered">0</div><div class="kpi__label">Respondidas</div></div>
-              <div class="kpi"><div class="kpi__num" id="kpiAccuracy">0%</div><div class="kpi__label">Acierto</div></div>
-              <div class="kpi"><div class="kpi__num" id="kpiStreak">0</div><div class="kpi__label">Racha</div></div>
-              <div class="kpi"><div class="kpi__num" id="kpiMistakes">0</div><div class="kpi__label">Fallos pendientes</div></div>
+            <div class="quick">
+              <button class="btn btn--primary" type="button" data-go="tests">Abrir Tests</button>
+              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Temario</button>
+              <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
+              <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
             </div>
           </section>
 
-          <section class="card card--plan">
+          <section class="card glass">
             <h2 class="card__title">Plan de estudio</h2>
             <div class="plan">
-              <div class="plan__row"><span>Objetivo diario</span><strong id="planDaily">15 preguntas</strong></div>
+              <div class="plan__row"><span>Objetivo diario</span><strong>15 preguntas</strong></div>
               <div class="plan__row"><span>Revisión</span><strong>Fallos últimos 7 días</strong></div>
-              <div class="plan__row"><span>Recomendación</span><strong id="planReco">Examen con corrección</strong></div>
+              <div class="plan__row"><span>Recomendación</span><strong>Examen con corrección</strong></div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col">
+          <section class="card glass hero-card" aria-label="Ilustración">
+            <img class="hero-img" src="./hero.jpg" alt="Ilustración de estudio" loading="lazy">
+          </section>
+
+          <section class="card glass">
+            <h2 class="card__title">Progreso</h2>
+            <div class="kpi-grid">
+              <div class="kpi">
+                <div class="kpi__num" id="kpiAnsweredHome">0</div>
+                <div class="kpi__label">Respondidas</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiAccuracyHome">0%</div>
+                <div class="kpi__label">Acierto</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiStreakHome">0</div>
+                <div class="kpi__label">Racha</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiMistakesHome">0</div>
+                <div class="kpi__label">Fallos pendientes</div>
+              </div>
             </div>
           </section>
         </aside>
@@ -98,78 +89,76 @@
     </section>
 
     <!-- TESTS -->
-    <section class="screen" id="screen-tests" aria-label="Tests">
-      <div class="layout">
-        <section class="card">
-          <h2 class="card__title">Configurar test</h2>
+    <section class="screen" id="screen-tests" data-screen="tests">
+      <div class="grid">
+        <div class="col">
+          <section class="card glass">
+            <h2 class="card__title">Configurar test</h2>
 
-          <div class="field">
-            <label class="label">Modo</label>
-            <div class="segmented" id="modeSegment">
-              <button class="segmented__btn is-active" data-mode="exam" type="button">Examen</button>
-              <button class="segmented__btn" data-mode="full" type="button">Completo</button>
-              <button class="segmented__btn" data-mode="practice" type="button">Práctica</button>
-              <button class="segmented__btn" data-mode="mistakes" type="button">Repaso de fallos</button>
-            </div>
-          </div>
-
-          <div class="field" id="practiceKindWrap" style="display:none;">
-            <label class="label">Tipo de práctica</label>
-            <div class="segmented" id="practiceKindSegment">
-              <button class="segmented__btn is-active" data-kind="practical" type="button">Trabajo práctico</button>
-              <button class="segmented__btn" data-kind="test" type="button">Test con corrección</button>
-            </div>
-            <div class="hint">En “Trabajo práctico” se muestran ejercicios por bloque (diagramas, casos, comparativas).</div>
-          </div>
-
-          <div class="field">
-            <label class="label">Bloque</label>
-            <select class="select" id="blockSelect">
-              <option value="" selected>Selecciona un bloque</option>
-              <option value="1">Bloque 1 · Organización del Estado</option>
-              <option value="2">Bloque 2 · Tecnología básica</option>
-              <option value="3">Bloque 3 · Desarrollo</option>
-              <option value="4">Bloque 4 · Sistemas y comunicaciones</option>
-            </select>
-            <div class="hint" id="blockHint">En modo “Completo” no hace falta elegir bloque.</div>
-          </div>
-
-          <div class="grid2">
             <div class="field">
-              <label class="label">Preguntas</label>
-              <select class="select" id="countSelect">
-                <option value="10">10</option>
-                <option value="15" selected>15</option>
-                <option value="30">30</option>
-                <option value="60">60</option>
+              <label class="label">Modo</label>
+              <div class="segmented" id="modeSegment">
+                <button class="segmented__btn is-active" data-mode="exam" type="button">Examen</button>
+                <button class="segmented__btn" data-mode="full" type="button">Completo</button>
+                <button class="segmented__btn" data-mode="practice" type="button">Práctica</button>
+                <button class="segmented__btn" data-mode="mistakes" type="button">Repaso de fallos</button>
+              </div>
+            </div>
+
+            <div class="field" id="practiceKindWrap" style="display:none;">
+              <label class="label">Tipo de práctica</label>
+              <div class="segmented" id="practiceKindSegment">
+                <button class="segmented__btn is-active" data-kind="practical" type="button">Trabajo práctico</button>
+                <button class="segmented__btn" data-kind="test" type="button">Test con corrección</button>
+              </div>
+              <div class="hint">En “Trabajo práctico” se muestran ejercicios por bloque (diagramas, casos, comparativas).</div>
+            </div>
+
+            <div class="field">
+              <label class="label">Bloque</label>
+              <select class="select" id="blockSelect">
+                <option value="" selected>Selecciona un bloque</option>
+                <option value="1">Bloque 1 · Organización del Estado</option>
+                <option value="2">Bloque 2 · Tecnología básica</option>
+                <option value="3">Bloque 3 · Desarrollo</option>
+                <option value="4">Bloque 4 · Sistemas y comunicaciones</option>
               </select>
+              <div class="hint" id="blockHint">En modo “Completo” no hace falta elegir bloque.</div>
             </div>
 
-            <div class="field">
-              <label class="label">Temporizador</label>
-              <label class="switch">
-                <input type="checkbox" id="timerToggle" checked />
-                <span class="switch__ui"></span>
-                <span class="switch__text">Activado</span>
-              </label>
+            <div class="grid2">
+              <div class="field">
+                <label class="label">Preguntas</label>
+                <select class="select" id="countSelect">
+                  <option value="10">10</option>
+                  <option value="15" selected>15</option>
+                  <option value="30">30</option>
+                  <option value="60">60</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label class="label">Temporizador</label>
+                <label class="switch">
+                  <input type="checkbox" id="timerToggle" checked />
+                  <span class="switch__ui"></span>
+                  <span class="switch__text">Activado</span>
+                </label>
+              </div>
             </div>
-          </div>
 
-          <button class="btn btn--primary" id="startBtn" disabled type="button">Empezar</button>
-          <div class="hint">Sistema con mezcla aleatoria, repaso de fallos y guardado de progreso.</div>
-        </section>
-
-        <aside class="stack">
-          <section class="card hero-card" aria-label="Ilustración">
-            <img class="hero-img" src="./hero.jpg" alt="Ilustración de estudio" loading="lazy">
+            <button class="btn btn--primary" id="startBtn" disabled type="button">Empezar</button>
+            <div class="hint">Sistema con mezcla aleatoria, repaso de fallos y guardado de progreso.</div>
           </section>
+        </div>
 
-          <section class="card">
+        <aside class="col">
+          <section class="card glass">
             <h2 class="card__title">Acceso rápido</h2>
             <div class="quick">
-              <button class="btn btn--ghost" type="button" id="btnGoTemario">Abrir Temario</button>
-              <button class="btn btn--ghost" type="button" id="btnGoStats">Abrir Stats</button>
-              <button class="btn btn--ghost" type="button" id="btnGoExam">Simulacro</button>
+              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Temario</button>
+              <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
+              <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
             </div>
           </section>
         </aside>
@@ -177,110 +166,154 @@
     </section>
 
     <!-- TEMARIO -->
-    <section class="screen" id="screen-temario" aria-label="Temario">
-      <div class="layout layout--single">
-        <section class="card">
-          <h2 class="card__title">Temario</h2>
+    <section class="screen" id="screen-temario" data-screen="temario">
+      <section class="card glass">
+        <h2 class="card__title">Temario</h2>
 
-          <div class="temario-toolbar">
-            <div class="field" style="margin:0;">
-              <label class="label">Bloque</label>
-              <select class="select" id="syllabusBlockSelect">
-                <option value="0" selected>Todos</option>
-                <option value="1">Bloque 1</option>
-                <option value="2">Bloque 2</option>
-                <option value="3">Bloque 3</option>
-                <option value="4">Bloque 4</option>
-              </select>
-            </div>
-
-            <div class="field" style="margin:0;">
-              <label class="label">Buscar</label>
-              <input class="input" id="syllabusSearch" type="text" placeholder="Buscar por título o tema..." autocomplete="off">
-            </div>
-
-            <div class="temario-progress" id="syllabusProgress">0% completado</div>
+        <div class="temario-toolbar">
+          <div class="field" style="margin:0;">
+            <label class="label">Bloque</label>
+            <select class="select" id="temarioBlock">
+              <option value="" selected>Todos</option>
+              <option value="1">Bloque 1</option>
+              <option value="2">Bloque 2</option>
+              <option value="3">Bloque 3</option>
+              <option value="4">Bloque 4</option>
+            </select>
           </div>
 
-          <div class="temario-list" id="syllabusList">
-            <div class="hint">Cargando temario...</div>
+          <div class="field" style="margin:0;">
+            <label class="label">Buscar</label>
+            <input class="input" id="temarioSearch" placeholder="Buscar por título o tema..." autocomplete="off">
           </div>
-        </section>
-      </div>
+
+          <div class="temario-progress">
+            <div class="temario-progress__pct" id="temarioPct">0% completado</div>
+            <div class="temario-progress__bar"><div class="temario-progress__fill" id="temarioFill" style="width:0%"></div></div>
+          </div>
+        </div>
+
+        <div class="temario-list" id="temarioList">Cargando temario...</div>
+      </section>
     </section>
 
     <!-- STATS -->
-    <section class="screen" id="screen-stats" aria-label="Estadísticas">
-      <div class="layout layout--single">
-        <section class="card">
-          <h2 class="card__title">Stats</h2>
+    <section class="screen" id="screen-stats" data-screen="stats">
+      <section class="card glass">
+        <h2 class="card__title">Stats</h2>
 
-          <div class="stats-grid2">
-            <div class="statBox">
-              <div class="statBox__label">Respondidas</div>
-              <div class="statBox__value" id="stTotalAnswered">0</div>
-            </div>
-            <div class="statBox">
-              <div class="statBox__label">Acierto</div>
-              <div class="statBox__value" id="stAccuracy">0%</div>
-            </div>
-            <div class="statBox">
-              <div class="statBox__label">Racha</div>
-              <div class="statBox__value" id="stStreak">0</div>
-            </div>
-            <div class="statBox">
-              <div class="statBox__label">Fallos pendientes</div>
-              <div class="statBox__value" id="stPendingMistakes">0</div>
-            </div>
+        <div class="kpi-grid">
+          <div class="kpi">
+            <div class="kpi__num" id="kpiAnsweredStats">0</div>
+            <div class="kpi__label">Respondidas</div>
           </div>
-
-          <div class="divider"></div>
-
-          <h3 class="subTitle">Rendimiento por bloque</h3>
-          <div class="blockStats" id="blockStats"></div>
-
-          <div class="divider"></div>
-
-          <h3 class="subTitle">Acciones</h3>
-          <div class="quick">
-            <button class="btn btn--ghost" type="button" id="btnResetStats">Reset Stats</button>
-            <button class="btn btn--ghost" type="button" id="btnResetMistakes">Reset Fallos</button>
+          <div class="kpi">
+            <div class="kpi__num" id="kpiAccuracyStats">0%</div>
+            <div class="kpi__label">Acierto</div>
           </div>
-          <div class="hint">Reset borra datos locales del dispositivo (no borra Supabase).</div>
-        </section>
-      </div>
+          <div class="kpi">
+            <div class="kpi__num" id="kpiStreakStats">0</div>
+            <div class="kpi__label">Racha</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__num" id="kpiMistakesStats">0</div>
+            <div class="kpi__label">Fallos pendientes</div>
+          </div>
+        </div>
+
+        <h3 class="subhead">Rendimiento por bloque</h3>
+        <div class="bars" id="blockBars"></div>
+
+        <h3 class="subhead">Acciones</h3>
+        <div class="quick">
+          <button class="btn btn--ghost" id="resetStats" type="button">Reset Stats</button>
+          <button class="btn btn--ghost" id="resetMistakes" type="button">Reset Fallos</button>
+        </div>
+
+        <div class="hint">Reset borra datos locales del dispositivo (no borra Supabase).</div>
+      </section>
     </section>
 
-    <!-- EXAM (SIMULACRO) -->
-    <section class="screen" id="screen-exam" aria-label="Simulacro">
-      <div class="layout layout--single">
-        <section class="card">
-          <h2 class="card__title">Simulacro</h2>
+    <!-- EXAM -->
+    <section class="screen" id="screen-exam" data-screen="exam">
+      <section class="card glass">
+        <h2 class="card__title">Simulacro</h2>
 
-          <div class="examGrid">
-            <div class="examItem"><span>Duración</span><strong>60 minutos</strong></div>
-            <div class="examItem"><span>Preguntas</span><strong>60</strong></div>
-            <div class="examItem"><span>Selección</span><strong>Todos los bloques</strong></div>
-            <div class="examItem"><span>Objetivo</span><strong>Ritmo + precisión</strong></div>
+        <div class="grid2">
+          <div class="field">
+            <label class="label">Duración</label>
+            <div class="pill">60 minutos</div>
           </div>
+          <div class="field">
+            <label class="label">Preguntas</label>
+            <div class="pill">60</div>
+          </div>
+        </div>
 
-          <button class="btn btn--primary" id="btnStartSimulacro" type="button" style="width:100%; min-height:58px; margin-top:14px;">
-            Iniciar simulacro
-          </button>
+        <div class="field">
+          <label class="label">Selección</label>
+          <select class="select" id="examBlock">
+            <option value="" selected>Todos los bloques</option>
+            <option value="1">Bloque 1</option>
+            <option value="2">Bloque 2</option>
+            <option value="3">Bloque 3</option>
+            <option value="4">Bloque 4</option>
+          </select>
+        </div>
 
-          <div class="hint">Modo examen real: sin corrección inmediata. Resultados al final.</div>
-        </section>
-      </div>
+        <div class="hint">Modo examen real: sin corrección inmediata. Resultados al final.</div>
+
+        <button class="btn btn--primary" id="startExam" type="button">Iniciar simulacro</button>
+      </section>
     </section>
   </main>
 
+  <!-- Bottom nav -->
   <nav class="bottom-nav" aria-label="Navegación">
-    <button class="nav-item active" data-screen="home" type="button">Inicio</button>
-    <button class="nav-item" data-screen="tests" type="button">Tests</button>
-    <button class="nav-item" data-screen="temario" type="button">Temario</button>
-    <button class="nav-item" data-screen="stats" type="button">Stats</button>
-    <button class="nav-item" data-screen="exam" type="button">Exam</button>
+    <button class="nav__btn is-active" data-nav="home" type="button">Inicio</button>
+    <button class="nav__btn" data-nav="tests" type="button">Tests</button>
+    <button class="nav__btn" data-nav="temario" type="button">Temario</button>
+    <button class="nav__btn" data-nav="stats" type="button">Stats</button>
+    <button class="nav__btn" data-nav="exam" type="button">Exam</button>
   </nav>
+
+  <!-- Coach FAB (solo en Inicio) -->
+  <button class="coach-fab" id="coachFab" type="button" aria-label="Abrir Coach TAI">
+    <img class="coach-fab__img" src="./coach.png" alt="">
+    <span class="coach-fab__label">Coach</span>
+  </button>
+
+  <!-- Coach Drawer -->
+  <aside class="coach-drawer" id="coachDrawer" aria-hidden="true">
+    <div class="coach-drawer__backdrop" data-coach-close="1"></div>
+
+    <div class="coach-drawer__panel" role="dialog" aria-label="Coach TAI">
+      <div class="coach-drawer__head">
+        <div class="coach-drawer__who">
+          <img class="coach-drawer__avatar" src="./coach.png" alt="">
+          <div>
+            <div class="coach-drawer__title">Coach TAI</div>
+            <div class="coach-drawer__sub">Escribe: “fallos”, “plan”, “bloque 2”, “tiempo”.</div>
+          </div>
+        </div>
+
+        <button class="btn btn--ghost btn--small" id="coachClose" type="button">Cerrar</button>
+      </div>
+
+      <div class="coach__log" id="coachLog" aria-live="polite"></div>
+
+      <div class="coach__composer">
+        <input class="coach__input" id="coachInput" type="text"
+               placeholder="Escribe: 'fallos', 'plan', 'bloque 2', 'tiempo'..." autocomplete="off" />
+        <button class="btn btn--primary coach__send" id="coachSend" type="button">Enviar</button>
+      </div>
+
+      <div class="coach__actions">
+        <button class="btn btn--ghost btn--small" id="coachClear" type="button">Limpiar chat</button>
+        <span class="coach__hint">Tip: “fallos” (repaso) · “plan” (estrategia) · “bloque 2” (enfoque)</span>
+      </div>
+    </div>
+  </aside>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
@@ -288,33 +321,3 @@
   <script src="./app.js?v=100"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
