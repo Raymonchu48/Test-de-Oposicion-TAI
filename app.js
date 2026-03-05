@@ -1,4 +1,4 @@
-// OpoStudy · app.js (SPA + Supabase + Tests + Temario + Coach Drawer + PWA install)
+// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Coach Drawer + PWA install)
 
 const { createClient } = window.supabase;
 
@@ -17,7 +17,9 @@ if (window.mermaid) {
 ========================= */
 const STORAGE_KEY = "opostudy_stats_v2";
 const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
-const STORAGE_TEMARIO_DONE = "opostudy_temario_done_v1";
+
+// ✅ Nuevo: completados de Parte práctica (antes era temario)
+const STORAGE_PRACTICA_DONE = "opostudy_practica_done_v1";
 
 const MISTAKES_LOOKBACK_DAYS = 30;
 
@@ -131,11 +133,16 @@ function updateStatsOnAnswer(stats, block, isCorrect) {
   stats.totalAnswered++;
   if (isCorrect) stats.totalCorrect++;
 
-  // byBlock
-  const b = String(block);
-  if (!stats.byBlock[b]) stats.byBlock[b] = { a: 0, c: 0 };
-  stats.byBlock[b].a++;
-  if (isCorrect) stats.byBlock[b].c++;
+  // ✅ byBlock solo si block es 1..4 (evita meter bloque 0/null desde Parte práctica)
+  const bNum = Number(block);
+  const isValidBlock = [1,2,3,4].includes(bNum);
+
+  if (isValidBlock) {
+    const b = String(bNum);
+    if (!stats.byBlock[b]) stats.byBlock[b] = { a: 0, c: 0 };
+    stats.byBlock[b].a++;
+    if (isCorrect) stats.byBlock[b].c++;
+  }
 
   // streak
   const today = new Date();
@@ -541,8 +548,14 @@ function renderQuestion() {
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "block";
 
-  modalEl.querySelector("#quizSub").textContent =
-    `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
+  // ✅ Subtítulo especial para Parte práctica
+  if (q.kind === "practice_questions") {
+    modalEl.querySelector("#quizSub").textContent =
+      `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
+  } else {
+    modalEl.querySelector("#quizSub").textContent =
+      `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
+  }
 
   modalEl.querySelector("#quizQuestion").textContent = q.statement;
 
@@ -591,15 +604,44 @@ function selectOption(i) {
     !state.examHardMode;
 
   if (showImmediateCorrection) {
-    modalEl.querySelectorAll(".opt").forEach((b) => {
-      const idx = Number(b.dataset.index);
-      if (idx === q.correctIndex) b.classList.add("is-correct");
-      if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
-    });
+    // Pintar correcto/incorrecto (si hay correcta definida)
+    if (q.kind === "practice_questions") {
+      const raw = (q.correctRaw || "").toString().trim().toUpperCase();
 
+      if (raw === "ANULADA" || q.correctIndex < 0) {
+        // no pintamos nada como correcto
+      } else if (Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3) {
+        modalEl.querySelectorAll(".opt").forEach((b) => {
+          const idx = Number(b.dataset.index);
+          if (idx === q.correctIndex) b.classList.add("is-correct");
+          if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
+        });
+      }
+    } else {
+      modalEl.querySelectorAll(".opt").forEach((b) => {
+        const idx = Number(b.dataset.index);
+        if (idx === q.correctIndex) b.classList.add("is-correct");
+        if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
+      });
+    }
+
+    // Texto de explicación/corrección
     const ex = modalEl.querySelector("#quizExplain");
     ex.style.display = "block";
-    ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
+
+    if (q.kind === "practice_questions") {
+      const raw = (q.correctRaw || "").toString().trim().toUpperCase();
+
+      if (raw === "ANULADA" || q.correctIndex < 0) {
+        ex.textContent = "Pregunta anulada.";
+      } else if (raw === "A" || raw === "B" || raw === "C" || raw === "D") {
+        ex.textContent = `Respuesta correcta: ${raw}.`;
+      } else {
+        ex.textContent = "Respuesta correcta no disponible.";
+      }
+    } else {
+      ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
+    }
   }
 
   modalEl.querySelector("#quizNext").disabled = false;
@@ -615,10 +657,26 @@ function goNext() {
   if (state.selected === null) return;
 
   const q = state.questions[state.index];
-  const isCorrect = state.selected === q.correctIndex;
 
-  if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
-  else if (state.mode === "mistakes") resolveMistake(q.id);
+  // ✅ Evaluación segura para Parte práctica
+  let isCorrect = false;
+  if (q.kind === "practice_questions") {
+    const raw = (q.correctRaw || "").toString().trim().toUpperCase();
+    if (raw === "ANULADA" || q.correctIndex < 0) {
+      // si está anulada, no cuenta como fallo (la consideramos "neutra")
+      isCorrect = true;
+    } else {
+      isCorrect = state.selected === q.correctIndex;
+    }
+  } else {
+    isCorrect = state.selected === q.correctIndex;
+  }
+
+  // ✅ Mistakes SOLO para tabla questions (no para practice_questions)
+  if (q.kind !== "practice_questions") {
+    if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
+    else if (state.mode === "mistakes") resolveMistake(q.id);
+  }
 
   state.answers.push({
     id: q.id,
@@ -629,6 +687,7 @@ function goNext() {
     isCorrect,
   });
 
+  // ✅ Stats: se cuentan en total, pero byBlock solo si block válido (ya lo controla updateStatsOnAnswer)
   updateStatsOnAnswer(stats, q.block, isCorrect);
 
   state.index++;
@@ -637,6 +696,13 @@ function goNext() {
   else renderQuestion();
 
   renderKpis();
+
+  // ✅ Si viene de Parte práctica: marcar completado automáticamente al finalizar
+  if (q.kind === "practice_questions") {
+    practicaDone[q.id] = true;
+    savePracticaDone();
+    renderPractica();
+  }
 }
 
 function finishTest() {
@@ -713,7 +779,7 @@ function shuffleArray(arr) {
   return a;
 }
 
-/* Practicals */
+/* Practicals (tu sistema anterior, se mantiene) */
 function renderPractical(p) {
   const bodyEl = modalEl.querySelector("#quizBody");
   const resultsEl = modalEl.querySelector("#quizResults");
@@ -775,59 +841,68 @@ function escapeHtml(s) {
 }
 
 /* =========================
-   Temario (Supabase)
-   Nota: usamos ord para ordenar (evita error order_in_topic)
+   ✅ Parte práctica (Supabase)  REEMPLAZA TEMARIO
+   Reutiliza los IDs del temario:
+   - temarioList, temarioBlock, temarioSearch, temarioPct, temarioFill
 ========================= */
-let syllabusCache = [];
-let temarioDone = loadTemarioDone();
+let practicaCache = [];
+let practicaDone = loadPracticaDone();
 
-function loadTemarioDone() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_TEMARIO_DONE) || "{}"); }
+function loadPracticaDone() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_PRACTICA_DONE) || "{}"); }
   catch { return {}; }
 }
-function saveTemarioDone() {
-  localStorage.setItem(STORAGE_TEMARIO_DONE, JSON.stringify(temarioDone));
+function savePracticaDone() {
+  localStorage.setItem(STORAGE_PRACTICA_DONE, JSON.stringify(practicaDone));
 }
 
-async function loadTemario() {
+function correctOptionToIndex(v) {
+  if (!v) return null;
+  const s = String(v).trim().toUpperCase();
+  if (s === "ANULADA") return -1;
+  const map = { A: 0, B: 1, C: 2, D: 3 };
+  return (s in map) ? map[s] : null;
+}
+
+async function loadPractica() {
   const listEl = document.getElementById("temarioList");
   if (!listEl) return;
 
-  listEl.textContent = "Cargando temario...";
+  listEl.textContent = "Cargando parte práctica...";
 
   const { data, error } = await sb
-    .from("syllabus_items")
-    .select("id,block,topic,title,detail,ord,tags")
-    .order("block", { ascending: true })
-    .order("topic", { ascending: true })
-    .order("ord", { ascending: true });
+    .from("practice_questions")
+    .select("id,supuesto,is_reserve,question_number,statement,option_a,option_b,option_c,option_d,correct_option,source_pdf,created_at")
+    .order("supuesto", { ascending: true })
+    .order("is_reserve", { ascending: true })
+    .order("question_number", { ascending: true });
 
   if (error) {
-    listEl.textContent = "Error cargando temario: " + error.message;
+    listEl.textContent = "Error cargando parte práctica: " + error.message;
     return;
   }
 
-  syllabusCache = data || [];
-  renderTemario();
+  practicaCache = data || [];
+  renderPractica();
 }
 
-function renderTemario() {
+function renderPractica() {
   const listEl = document.getElementById("temarioList");
-  const sel = document.getElementById("temarioBlock");
+  const sel = document.getElementById("temarioBlock"); // lo usamos como filtro de “Supuesto”
   const q = (document.getElementById("temarioSearch")?.value || "").trim().toLowerCase();
 
-  const block = sel?.value ? Number(sel.value) : null;
+  // Filtro: “Supuesto” (I/II) o ALL
+  const supuesto = sel?.value && sel.value !== "ALL" ? String(sel.value) : null;
 
-  let items = [...syllabusCache];
-  if (block) items = items.filter(x => Number(x.block) === block);
+  let items = [...practicaCache];
+  if (supuesto) items = items.filter(x => String(x.supuesto) === supuesto);
   if (q) items = items.filter(x =>
-    (x.title || "").toLowerCase().includes(q) ||
-    String(x.topic || "").includes(q) ||
-    (x.detail || "").toLowerCase().includes(q)
+    (x.statement || "").toLowerCase().includes(q) ||
+    String(x.question_number || "").includes(q)
   );
 
   const total = items.length;
-  const done = items.filter(x => !!temarioDone[x.id]).length;
+  const done = items.filter(x => !!practicaDone[x.id]).length;
   const pct = total ? Math.round((done / total) * 100) : 0;
 
   const pctEl = document.getElementById("temarioPct");
@@ -836,25 +911,25 @@ function renderTemario() {
   if (fillEl) fillEl.style.width = `${pct}%`;
 
   if (!items.length) {
-    listEl.textContent = "No hay elementos para ese filtro.";
+    listEl.textContent = "No hay ejercicios para ese filtro.";
     return;
   }
 
   listEl.innerHTML = items.map(x => {
-    const checked = temarioDone[x.id] ? "checked" : "";
-    const title = escapeHtml(x.title || "");
-    const meta = `Bloque ${x.block} · Tema ${x.topic}`;
-    const detail = escapeHtml(x.detail || "");
+    const checked = practicaDone[x.id] ? "checked" : "";
+    const meta = `Supuesto ${escapeHtml(x.supuesto)} · Pregunta ${x.question_number}${x.is_reserve ? " (Reserva)" : ""}`;
+    const preview = escapeHtml((x.statement || "").slice(0, 140)) + ((x.statement || "").length > 140 ? "…" : "");
+
     return `
-      <div class="tema ${temarioDone[x.id] ? "is-done" : ""}" data-id="${x.id}">
+      <div class="tema ${practicaDone[x.id] ? "is-done" : ""}" data-id="${x.id}">
         <input class="tema__check" type="checkbox" ${checked} aria-label="Marcar completado">
         <div>
-          <div class="tema__title">${title}</div>
-          <div class="tema__meta">${meta}</div>
-          <div class="tema__detail">${detail || ""}</div>
+          <div class="tema__title">${meta}</div>
+          <div class="tema__meta">${preview}</div>
+          <div class="tema__detail"></div>
         </div>
         <div class="tema__actions">
-          <button class="btn btn--ghost btn--small tema__toggle" type="button">Ver</button>
+          <button class="btn btn--ghost btn--small practica__resolve" type="button">Resolver</button>
         </div>
       </div>
     `;
@@ -863,19 +938,67 @@ function renderTemario() {
   // Listeners
   listEl.querySelectorAll(".tema").forEach(row => {
     const id = row.dataset.id;
+
     row.querySelector(".tema__check").addEventListener("change", (e) => {
-      temarioDone[id] = !!e.target.checked;
-      saveTemarioDone();
-      renderTemario();
+      practicaDone[id] = !!e.target.checked;
+      savePracticaDone();
+      renderPractica();
     });
-    row.querySelector(".tema__toggle").addEventListener("click", () => {
-      row.classList.toggle("is-open");
+
+    row.querySelector(".practica__resolve").addEventListener("click", () => {
+      const item = practicaCache.find(x => x.id === id);
+      if (!item) return;
+      openPracticeQuestion(item);
     });
   });
 }
 
-document.getElementById("temarioBlock")?.addEventListener("change", renderTemario);
-document.getElementById("temarioSearch")?.addEventListener("input", renderTemario);
+function openPracticeQuestion(item) {
+  const correctIndex = correctOptionToIndex(item.correct_option);
+
+  // Convertimos tu fila de practice_questions a “question” compatible con el modal existente
+  const q = {
+    kind: "practice_questions",
+
+    id: item.id,
+    supuesto: String(item.supuesto || ""),
+    is_reserve: !!item.is_reserve,
+    question_number: Number(item.question_number || 0),
+
+    statement: item.statement || "",
+    options: [item.option_a, item.option_b, item.option_c, item.option_d].map(x => x || ""),
+
+    correctIndex: (correctIndex === null ? 0 : correctIndex), // para evitar crash si faltara
+    correctRaw: (item.correct_option || "").toString(),
+
+    explanation: "",
+    reference: item.source_pdf || "",
+
+    // para compatibilidad con stats/mistakes:
+    block: 0,
+    topic: 0,
+    difficulty: null,
+  };
+
+  // Forzamos modo práctica-test con corrección inmediata
+  state.examHardMode = false;
+  state.mode = "practice";
+  state.practiceKind = "test";
+  state.timerEnabled = false;
+
+  state.questions = [q];
+  state.index = 0;
+  state.selected = null;
+  state.answers = [];
+  state.timeElapsed = 0;
+
+  openModal();
+  renderQuestion();
+}
+
+// Hooks (reutilizan IDs del “temario” en HTML)
+document.getElementById("temarioBlock")?.addEventListener("change", renderPractica);
+document.getElementById("temarioSearch")?.addEventListener("input", renderPractica);
 
 /* =========================
    Coach Drawer (right slide)
@@ -1001,7 +1124,9 @@ btnInstall?.addEventListener("click", async () => {
 ========================= */
 initTestsUI();
 renderKpis();
-loadTemario();
+
+// ✅ Antes: loadTemario(); Ahora: loadPractica();
+loadPractica();
 
 // Arranque coach mensaje
 coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
