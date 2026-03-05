@@ -42,7 +42,7 @@
 
             <div class="quick">
               <button class="btn btn--primary" type="button" data-go="tests">Abrir Tests</button>
-              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Temario</button>
+              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Parte práctica</button>
               <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
               <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
             </div>
@@ -59,17 +59,17 @@
         </div>
 
         <aside class="col">
-         <section class="card glass hero-card" aria-label="Video temario">
-  <div class="video-frame">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1&playsinline=1"
-      title="Desmitificando el Temario TAI"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen>
-    </iframe>
-  </div>
-</section> 
+          <section class="card glass hero-card" aria-label="Video temario">
+            <div class="video-frame">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1&playsinline=1"
+                title="Desmitificando el Temario TAI"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
+            </div>
+          </section>
 
           <section class="card glass">
             <h2 class="card__title">Progreso</h2>
@@ -164,7 +164,7 @@
           <section class="card glass">
             <h2 class="card__title">Acceso rápido</h2>
             <div class="quick">
-              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Temario</button>
+              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Parte práctica</button>
               <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
               <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
             </div>
@@ -173,35 +173,35 @@
       </div>
     </section>
 
-    <!-- TEMARIO -->
+    <!-- PARTE PRÁCTICA (reusa screen "temario" para no romper el JS/SPA) -->
     <section class="screen" id="screen-temario" data-screen="temario">
       <section class="card glass">
-        <h2 class="card__title">Temario</h2>
+        <h2 class="card__title">Parte práctica</h2>
 
         <div class="temario-toolbar">
           <div class="field" style="margin:0;">
-            <label class="label">Bloque</label>
+            <label class="label">Supuesto</label>
             <select class="select" id="temarioBlock">
-              <option value="" selected>Todos</option>
-              <option value="1">Bloque 1</option>
-              <option value="2">Bloque 2</option>
-              <option value="3">Bloque 3</option>
-              <option value="4">Bloque 4</option>
+              <option value="ALL" selected>Todos</option>
+              <option value="I">Supuesto I</option>
+              <option value="II">Supuesto II</option>
             </select>
           </div>
 
           <div class="field" style="margin:0;">
             <label class="label">Buscar</label>
-            <input class="input" id="temarioSearch" placeholder="Buscar por título o tema..." autocomplete="off">
+            <input class="input" id="temarioSearch" placeholder="Buscar por enunciado o nº de pregunta..." autocomplete="off">
           </div>
 
           <div class="temario-progress">
             <div class="temario-progress__pct" id="temarioPct">0% completado</div>
-            <div class="temario-progress__bar"><div class="temario-progress__fill" id="temarioFill" style="width:0%"></div></div>
+            <div class="temario-progress__bar">
+              <div class="temario-progress__fill" id="temarioFill" style="width:0%"></div>
+            </div>
           </div>
         </div>
 
-        <div class="temario-list" id="temarioList">Cargando temario...</div>
+        <div class="temario-list" id="temarioList">Cargando parte práctica...</div>
       </section>
     </section>
 
@@ -280,7 +280,7 @@
   <nav class="bottom-nav" aria-label="Navegación">
     <button class="nav__btn is-active" data-nav="home" type="button">Inicio</button>
     <button class="nav__btn" data-nav="tests" type="button">Tests</button>
-    <button class="nav__btn" data-nav="temario" type="button">Temario</button>
+    <button class="nav__btn" data-nav="temario" type="button">Práctica</button>
     <button class="nav__btn" data-nav="stats" type="button">Stats</button>
     <button class="nav__btn" data-nav="exam" type="button">Exam</button>
   </nav>
@@ -329,4 +329,3 @@
   <script src="./app.js?v=100"></script>
 </body>
 </html>
-
