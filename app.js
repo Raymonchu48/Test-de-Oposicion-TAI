@@ -558,10 +558,16 @@ function renderQuestion() {
   if (q.kind === "practice_questions") {
     modalEl.querySelector("#quizSub").textContent =
       `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
-  } else {
-    modalEl.querySelector("#quizSub").textContent =
-      `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
-  }
+  } if (q.kind === "practice_questions") {
+  modalEl.querySelector("#quizSub").textContent =
+    `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
+} else if (q.kind === "official_test") {
+  modalEl.querySelector("#quizSub").textContent =
+    `${q.testCode} · Parte ${q.part} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
+} else {
+  modalEl.querySelector("#quizSub").textContent =
+    `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
+}
 
   modalEl.querySelector("#quizQuestion").textContent = q.statement;
 
@@ -683,10 +689,10 @@ function goNext() {
   }
 
   // ✅ Mistakes SOLO para tabla questions (no para practice_questions)
-  if (q.kind !== "practice_questions") {
-    if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
-    else if (state.mode === "mistakes") resolveMistake(q.id);
-  }
+  if (q.kind !== "practice_questions" && q.kind !== "official_test") {
+  if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
+  else if (state.mode === "mistakes") resolveMistake(q.id);
+}
 
   state.answers.push({
     id: q.id,
@@ -1137,6 +1143,125 @@ renderKpis();
 
 // ✅ Antes: loadTemario(); Ahora: loadPractica();
 loadPractica();
+/* =========================
+   Test oficial (TAI-2024) desde Supabase
+========================= */
+const officialTestSelect = document.getElementById("officialTestSelect");
+const btnOfficialPart1 = document.getElementById("btnOfficialPart1");
+const btnOfficialPart2 = document.getElementById("btnOfficialPart2");
+const officialTestMeta = document.getElementById("officialTestMeta");
+
+function letterToIndex(letter) {
+  const s = String(letter || "").trim().toUpperCase();
+  if (s === "A") return 0;
+  if (s === "B") return 1;
+  if (s === "C") return 2;
+  if (s === "D") return 3;
+  return null;
+}
+
+async function countOfficialParts(testCode) {
+  // cuenta preguntas por parte para mostrarlo en el hint
+  const { data, error } = await sb
+    .from("official_test_questions")
+    .select("part", { count: "exact", head: false })
+    .eq("test_code", testCode);
+
+  if (error) {
+    if (officialTestMeta) officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
+    return;
+  }
+
+  // data trae filas; mejor contar por query directa:
+  const { count: c1 } = await sb
+    .from("official_test_questions")
+    .select("*", { count: "exact", head: true })
+    .eq("test_code", testCode)
+    .eq("part", 1);
+
+  const { count: c2 } = await sb
+    .from("official_test_questions")
+    .select("*", { count: "exact", head: true })
+    .eq("test_code", testCode)
+    .eq("part", 2);
+
+  if (officialTestMeta) officialTestMeta.textContent =
+    `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
+}
+
+async function fetchOfficialTest({ testCode, part }) {
+  const { data, error } = await sb
+    .from("official_test_questions")
+    .select("id,test_code,part,question_number,statement,option_a,option_b,option_c,option_d,correct_option,is_reserve")
+    .eq("test_code", testCode)
+    .eq("part", Number(part))
+    .order("is_reserve", { ascending: true })
+    .order("question_number", { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []).map(r => ({
+    kind: "official_test",
+    id: r.id,
+    testCode: r.test_code,
+    part: r.part,
+    is_reserve: !!r.is_reserve,
+    question_number: r.question_number,
+
+    // compatibilidad con el modal
+    block: 0,
+    topic: 0,
+    difficulty: null,
+
+    statement: r.statement,
+    options: [r.option_a, r.option_b, r.option_c, r.option_d],
+    correctIndex: letterToIndex(r.correct_option), // puede ser null
+    explanation: "",
+    reference: "",
+  }));
+}
+
+async function startOfficialPart(part) {
+  try {
+    const testCode = officialTestSelect?.value || "TAI-2024";
+    const qs = await fetchOfficialTest({ testCode, part });
+
+    if (!qs.length) {
+      alert(`No hay preguntas cargadas para ${testCode} Parte ${part}. Importa el CSV en Supabase.`);
+      return;
+    }
+
+    // modo examen: sin corrección inmediata
+    state.examHardMode = true;
+    state.mode = "exam";
+    state.practiceKind = "test";
+
+    // si quieres usar el toggle de temporizador, respeta state.timerEnabled tal cual
+    state.questions = qs;
+    state.index = 0;
+    state.selected = null;
+    state.answers = [];
+    state.timeElapsed = 0;
+
+    openModal();
+    renderQuestion();
+    startTimerIfNeeded(); // cuenta tiempo, sin límite fijo
+  } catch (e) {
+    console.error(e);
+    alert("Error cargando test oficial: " + (e?.message || JSON.stringify(e)));
+  }
+}
+
+btnOfficialPart1?.addEventListener("click", () => startOfficialPart(1));
+btnOfficialPart2?.addEventListener("click", () => startOfficialPart(2));
+
+officialTestSelect?.addEventListener("change", () => {
+  const code = officialTestSelect.value;
+  countOfficialParts(code);
+});
+
+// init del widget
+if (officialTestSelect) countOfficialParts(officialTestSelect.value);
 
 // Arranque coach mensaje
 coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
@@ -1147,6 +1272,7 @@ document.getElementById("enterAppBtn")?.addEventListener("click", () => {
   // opcional: abrir coach con un pequeño delay para que la animación sea suave
   setTimeout(() => openCoach(), 180);
 });
+
 
 
 
