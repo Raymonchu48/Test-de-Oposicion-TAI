@@ -40,6 +40,8 @@ function showScreen(name) {
 
   // si sales de home, cierro drawer para no “romper” móvil
   if (name !== "home") closeCoach();
+    // Si hay modal abierto y navegas, lo cierro (evita que “se vea en todas las pantallas”)
+  if (modalEl && modalEl.classList.contains("is-open")) closeModal();
 }
 
 navBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.nav)));
@@ -1133,3 +1135,4 @@ coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2
 
 // Arrancar en Home
 showScreen("home");
+
