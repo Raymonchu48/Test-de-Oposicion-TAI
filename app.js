@@ -31,6 +31,7 @@ const navBtns = Array.from(document.querySelectorAll("[data-nav]"));
 const goBtns = Array.from(document.querySelectorAll("[data-go]"));
 
 function showScreen(name) {
+  document.body.dataset.screen = name;
   screens.forEach(s => s.classList.toggle("is-active", s.dataset.screen === name));
   navBtns.forEach(b => b.classList.toggle("is-active", b.dataset.nav === name));
 
@@ -1149,6 +1150,7 @@ document.getElementById("enterAppBtn")?.addEventListener("click", () => {
 /* Oculta nav inferior en splash */
 .screen[data-screen="start"] ~ .bottom-nav { display:none; } /* fallback */
 body[data-screen="start"] .bottom-nav { display:none; }
+
 
 
 
