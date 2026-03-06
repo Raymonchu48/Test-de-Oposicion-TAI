@@ -680,3 +680,127 @@ body::before{
 
 /* Cuando el modal está abierto, oculto la barra inferior */
 body.has-modal-open .bottom-nav{ display: none !important; }
+
+/* ===== Modal Quiz: acabado profesional ===== */
+.modal{ z-index: 9999; }
+.modal__panel{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(15, 25, 35, .72);
+  box-shadow: 0 20px 80px rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+}
+
+.quiz{ padding: 16px; }
+.quiz__top{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,.10);
+}
+
+.quiz__title{
+  font-weight: 800;
+  letter-spacing: .2px;
+}
+.quiz__sub{
+  opacity: .85;
+  margin-top: 4px;
+}
+
+.quiz__timer{
+  font-variant-numeric: tabular-nums;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.quiz__body{
+  padding: 14px 2px 8px;
+}
+
+.quiz__q{
+  font-size: 1.05rem;
+  line-height: 1.35;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+/* Opciones */
+.quiz__opts{
+  display: grid;
+  gap: 10px;
+}
+
+.opt{
+  width: 100%;
+  text-align: left;
+  border-radius: 14px;
+  padding: 12px 12px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  transition: transform .08s ease, background .12s ease, border-color .12s ease;
+}
+.opt:hover{ transform: translateY(-1px); background: rgba(255,255,255,.08); }
+.opt.is-selected{ border-color: rgba(4,151,167,.65); background: rgba(4,151,167,.10); }
+.opt.is-correct{ border-color: rgba(0,200,120,.75); background: rgba(0,200,120,.12); }
+.opt.is-wrong{ border-color: rgba(255,80,80,.75); background: rgba(255,80,80,.12); }
+
+.opt__key{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 28px;
+  height: 28px;
+  border-radius: 10px;
+  margin-right: 10px;
+  font-weight: 800;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.10);
+}
+
+.opt__text{
+  display: inline;
+  font-weight: 600;
+  opacity: .95;
+  word-break: break-word;
+}
+
+/* Si la opción parece "código" */
+.opt.is-code .opt__text{
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-weight: 600;
+  font-size: .92rem;
+  white-space: pre-wrap;
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.10);
+  padding: 6px 8px;
+  border-radius: 10px;
+  display: inline-block;
+}
+
+/* Explicación */
+.quiz__explain{
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.10);
+  line-height: 1.35;
+}
+
+/* Footer */
+.quiz__footer{
+  display:flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.10);
+  margin-top: 12px;
+}
+
+/* Barra progreso */
+.quiz__bar{ background: rgba(255,255,255,.08); border-radius: 999px; overflow:hidden; }
+.quiz__barFill{ height: 10px; border-radius: 999px; }
