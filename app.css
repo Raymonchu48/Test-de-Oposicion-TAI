@@ -804,3 +804,47 @@ body.has-modal-open .bottom-nav{ display: none !important; }
 /* Barra progreso */
 .quiz__bar{ background: rgba(255,255,255,.08); border-radius: 999px; overflow:hidden; }
 .quiz__barFill{ height: 10px; border-radius: 999px; }
+/* ===== Ajuste contraste + A/B/C/D en rojo corporativo ===== */
+
+/* 1) Texto general del modal más claro */
+.modal .quiz,
+.modal .quiz__q,
+.modal .quiz__sub,
+.modal .opt__text,
+.modal .quiz__explain{
+  color: rgba(255,255,255,.92);
+}
+
+/* Subtítulo un pelín menos que el título, pero legible */
+.modal .quiz__sub{
+  color: rgba(255,255,255,.80);
+}
+
+/* 2) Pregunta (enunciado) más brillante */
+.modal .quiz__q{
+  color: rgba(255,255,255,.96);
+}
+
+/* 3) Letra/Badge A B C D en rojo (usa el rojo que ya tienes en la app) */
+:root{
+  --opostudy-red: #ff4d5a; /* si tu rojo real es otro, cámbialo aquí */
+}
+
+.modal .opt__key{
+  color: #fff;
+  background: color-mix(in srgb, var(--opostudy-red) 26%, rgba(255,255,255,.06));
+  border-color: color-mix(in srgb, var(--opostudy-red) 55%, rgba(255,255,255,.10));
+  box-shadow: 0 8px 22px rgba(255,77,90,.18);
+}
+
+/* 4) Cuando está seleccionada: reforzar el rojo en el badge */
+.modal .opt.is-selected .opt__key{
+  background: color-mix(in srgb, var(--opostudy-red) 40%, rgba(255,255,255,.08));
+  border-color: var(--opostudy-red);
+}
+
+/* 5) Si la opción es "code": texto un poco más claro y caja menos oscura */
+.modal .opt.is-code .opt__text{
+  color: rgba(255,255,255,.94);
+  background: rgba(0,0,0,.12);
+}
