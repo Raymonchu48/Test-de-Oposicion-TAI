@@ -1,4 +1,4 @@
-// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Coach Drawer + PWA install)
+// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Test oficial + Coach Drawer + PWA install)
 
 const { createClient } = window.supabase;
 
@@ -17,8 +17,6 @@ if (window.mermaid) {
 ========================= */
 const STORAGE_KEY = "opostudy_stats_v2";
 const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
-
-// ✅ Nuevo: completados de Parte práctica (antes era temario)
 const STORAGE_PRACTICA_DONE = "opostudy_practica_done_v1";
 
 const MISTAKES_LOOKBACK_DAYS = 30;
@@ -41,7 +39,8 @@ function showScreen(name) {
 
   // si sales de home, cierro drawer para no “romper” móvil
   if (name !== "home") closeCoach();
-    // Si hay modal abierto y navegas, lo cierro (evita que “se vea en todas las pantallas”)
+
+  // si hay modal abierto y navegas, lo cierro (evita que “se vea en todas las pantallas”)
   if (modalEl && modalEl.classList.contains("is-open")) closeModal();
 }
 
@@ -98,7 +97,6 @@ function upsertMistake(questionId, block, topic) {
       resolved_at: null
     });
   }
-
   saveMistakes(list);
 }
 
@@ -133,13 +131,15 @@ function getPendingMistakesCount(block = null) {
 }
 
 function updateStatsOnAnswer(stats, block, isCorrect) {
+  // si no se puede corregir (null), no tocamos stats
+  if (isCorrect === null || isCorrect === undefined) return;
+
   stats.totalAnswered++;
   if (isCorrect) stats.totalCorrect++;
 
-  // ✅ byBlock solo si block es 1..4 (evita meter bloque 0/null desde Parte práctica)
+  // byBlock solo si block es 1..4
   const bNum = Number(block);
-  const isValidBlock = [1,2,3,4].includes(bNum);
-
+  const isValidBlock = [1, 2, 3, 4].includes(bNum);
   if (isValidBlock) {
     const b = String(bNum);
     if (!stats.byBlock[b]) stats.byBlock[b] = { a: 0, c: 0 };
@@ -164,32 +164,18 @@ function updateStatsOnAnswer(stats, block, isCorrect) {
 /* Render KPIs */
 const stats = loadStats();
 
-function renderKpis() {
-  const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
-  const pending = getPendingMistakesCount(null);
-
-  // Home
-  setText("kpiAnsweredHome", stats.totalAnswered);
-  setText("kpiAccuracyHome", `${acc}%`);
-  setText("kpiStreakHome", stats.streakDays);
-  setText("kpiMistakesHome", pending);
-
-  // Stats screen
-  setText("kpiAnsweredStats", stats.totalAnswered);
-  setText("kpiAccuracyStats", `${acc}%`);
-  setText("kpiStreakStats", stats.streakDays);
-  setText("kpiMistakesStats", pending);
-
-  renderBlockBars();
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(val);
 }
 
 function renderBlockBars() {
   const el = document.getElementById("blockBars");
   if (!el) return;
-  const blocks = ["1","2","3","4"].map(b => {
+  const blocks = ["1", "2", "3", "4"].map(b => {
     const a = stats.byBlock?.[b]?.a || 0;
     const c = stats.byBlock?.[b]?.c || 0;
-    const pct = a ? Math.round((c/a)*100) : 0;
+    const pct = a ? Math.round((c / a) * 100) : 0;
     return { b, pct, a, c };
   });
 
@@ -207,9 +193,23 @@ function renderBlockBars() {
   `).join("");
 }
 
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = String(val);
+function renderKpis() {
+  const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
+  const pending = getPendingMistakesCount(null);
+
+  // Home
+  setText("kpiAnsweredHome", stats.totalAnswered);
+  setText("kpiAccuracyHome", `${acc}%`);
+  setText("kpiStreakHome", stats.streakDays);
+  setText("kpiMistakesHome", pending);
+
+  // Stats screen
+  setText("kpiAnsweredStats", stats.totalAnswered);
+  setText("kpiAccuracyStats", `${acc}%`);
+  setText("kpiStreakStats", stats.streakDays);
+  setText("kpiMistakesStats", pending);
+
+  renderBlockBars();
 }
 
 /* Reset buttons */
@@ -250,7 +250,7 @@ const state = {
   timeElapsed: 0,
   timer: null,
 
-  examHardMode: false,          // para simulacro
+  examHardMode: false,
 };
 
 function initTestsUI() {
@@ -342,6 +342,24 @@ function syncStartEnabled() {
   startBtn.disabled = !ok;
 }
 
+/* Helpers */
+function normalizeOptions(opts) {
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === "string") {
+    try { return JSON.parse(opts); } catch { return [opts]; }
+  }
+  return [];
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 /* Fetchers */
 async function fetchQuestions({ mode, block, count }) {
   const params = {
@@ -354,6 +372,7 @@ async function fetchQuestions({ mode, block, count }) {
   if (error) throw error;
 
   return (data || []).map(q => ({
+    kind: "db_questions",
     id: q.id,
     block: q.block,
     topic: q.topic,
@@ -377,6 +396,7 @@ async function fetchMistakeQuestions() {
   if (error) throw error;
 
   return shuffleArray(data || []).map(q => ({
+    kind: "db_questions",
     id: q.id,
     block: q.block,
     topic: q.topic,
@@ -471,7 +491,9 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
   }
 });
 
-/* Modal UI */
+/* =========================
+   Modal UI
+========================= */
 let modalEl = null;
 
 function ensureModal() {
@@ -519,8 +541,8 @@ function ensureModal() {
   modalEl.addEventListener("click", (e) => {
     if (e.target?.dataset?.close) closeModal();
   });
-  modalEl.querySelector("#quizCloseBtn").addEventListener("click", () => closeModal());
 
+  modalEl.querySelector("#quizCloseBtn").addEventListener("click", () => closeModal());
   modalEl.querySelector("#quizPrev").addEventListener("click", () => goPrev());
   modalEl.querySelector("#quizNext").addEventListener("click", () => goNext());
 
@@ -531,9 +553,9 @@ function openModal() {
   ensureModal();
   modalEl.classList.add("is-open");
   document.body.classList.add("no-scroll");
-  document.body.classList.add("has-modal-open"); // ✅ oculta bottom-nav
+  document.body.classList.add("has-modal-open"); // oculta bottom-nav
 
-  // re-habilitar botones de test por si venimos de práctico
+  // por si venimos de práctico (que los oculta)
   modalEl.querySelector("#quizPrev").style.display = "";
   modalEl.querySelector("#quizNext").style.display = "";
 }
@@ -543,7 +565,7 @@ function closeModal() {
   if (!modalEl) return;
   modalEl.classList.remove("is-open");
   document.body.classList.remove("no-scroll");
-  document.body.classList.remove("has-modal-open"); // ✅ vuelve a mostrar bottom-nav
+  document.body.classList.remove("has-modal-open");
 }
 
 function renderQuestion() {
@@ -554,20 +576,17 @@ function renderQuestion() {
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "block";
 
-  // ✅ Subtítulo especial para Parte práctica
+  // Subtítulo
   if (q.kind === "practice_questions") {
     modalEl.querySelector("#quizSub").textContent =
       `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
-  } if (q.kind === "practice_questions") {
-  modalEl.querySelector("#quizSub").textContent =
-    `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
-} else if (q.kind === "official_test") {
-  modalEl.querySelector("#quizSub").textContent =
-    `${q.testCode} · Parte ${q.part} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
-} else {
-  modalEl.querySelector("#quizSub").textContent =
-    `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
-}
+  } else if (q.kind === "official_test") {
+    modalEl.querySelector("#quizSub").textContent =
+      `${q.testCode} · Parte ${q.part} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
+  } else {
+    modalEl.querySelector("#quizSub").textContent =
+      `Pregunta ${state.index + 1} de ${state.questions.length} · Bloque ${q.block} · Tema ${q.topic}`;
+  }
 
   modalEl.querySelector("#quizQuestion").textContent = q.statement;
 
@@ -587,10 +606,11 @@ function renderQuestion() {
       <span class="opt__text"></span>
     `;
     btn.querySelector(".opt__text").textContent = text;
-    // Si la opción tiene pinta de código/HTML, la pinto como "code chip"
-const t = String(text || "");
-const looksCode = t.includes("<") || t.includes(">") || t.includes("{") || t.includes("}") || t.includes(";") || t.includes("=>");
-if (looksCode) btn.classList.add("is-code");
+
+    // si parece código/HTML, estilo monospace
+    const t = String(text || "");
+    const looksCode = t.includes("<") || t.includes(">") || t.includes("{") || t.includes("}") || t.includes(";") || t.includes("=>");
+    if (looksCode) btn.classList.add("is-code");
 
     btn.addEventListener("click", () => selectOption(i));
     optsEl.appendChild(btn);
@@ -598,7 +618,6 @@ if (looksCode) btn.classList.add("is-code");
 
   const pct = (state.index / state.questions.length) * 100;
   modalEl.querySelector("#quizBarFill").style.width = `${pct}%`;
-
   modalEl.querySelector("#quizPrev").disabled = state.index === 0;
 
   const ex = modalEl.querySelector("#quizExplain");
@@ -620,13 +639,12 @@ function selectOption(i) {
     !state.examHardMode;
 
   if (showImmediateCorrection) {
-    // Pintar correcto/incorrecto (si hay correcta definida)
+    // Pintar correcto/incorrecto (si hay correctIndex)
+    const hasCorrect = Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3;
+
     if (q.kind === "practice_questions") {
       const raw = (q.correctRaw || "").toString().trim().toUpperCase();
-
-      if (raw === "ANULADA" || q.correctIndex < 0) {
-        // no pintamos nada como correcto
-      } else if (Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3) {
+      if (raw !== "ANULADA" && hasCorrect) {
         modalEl.querySelectorAll(".opt").forEach((b) => {
           const idx = Number(b.dataset.index);
           if (idx === q.correctIndex) b.classList.add("is-correct");
@@ -634,11 +652,13 @@ function selectOption(i) {
         });
       }
     } else {
-      modalEl.querySelectorAll(".opt").forEach((b) => {
-        const idx = Number(b.dataset.index);
-        if (idx === q.correctIndex) b.classList.add("is-correct");
-        if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
-      });
+      if (hasCorrect) {
+        modalEl.querySelectorAll(".opt").forEach((b) => {
+          const idx = Number(b.dataset.index);
+          if (idx === q.correctIndex) b.classList.add("is-correct");
+          if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
+        });
+      }
     }
 
     // Texto de explicación/corrección
@@ -647,14 +667,9 @@ function selectOption(i) {
 
     if (q.kind === "practice_questions") {
       const raw = (q.correctRaw || "").toString().trim().toUpperCase();
-
-      if (raw === "ANULADA" || q.correctIndex < 0) {
-        ex.textContent = "Pregunta anulada.";
-      } else if (raw === "A" || raw === "B" || raw === "C" || raw === "D") {
-        ex.textContent = `Respuesta correcta: ${raw}.`;
-      } else {
-        ex.textContent = "Respuesta correcta no disponible.";
-      }
+      if (raw === "ANULADA" || q.correctIndex < 0) ex.textContent = "Pregunta anulada.";
+      else if (raw === "A" || raw === "B" || raw === "C" || raw === "D") ex.textContent = `Respuesta correcta: ${raw}.`;
+      else ex.textContent = "Respuesta correcta no disponible.";
     } else {
       ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
     }
@@ -674,25 +689,28 @@ function goNext() {
 
   const q = state.questions[state.index];
 
-  // ✅ Evaluación segura para Parte práctica
+  // Evaluación (puede ser null si no hay plantilla)
   let isCorrect = false;
+
   if (q.kind === "practice_questions") {
     const raw = (q.correctRaw || "").toString().trim().toUpperCase();
-    if (raw === "ANULADA" || q.correctIndex < 0) {
-      // si está anulada, no cuenta como fallo (la consideramos "neutra")
-      isCorrect = true;
-    } else {
-      isCorrect = state.selected === q.correctIndex;
-    }
+    if (raw === "ANULADA" || q.correctIndex < 0) isCorrect = true;
+    else isCorrect = state.selected === q.correctIndex;
+
+  } else if (q.kind === "official_test") {
+    // si no hay plantilla (correctIndex null), no evaluamos
+    if (q.correctIndex === null || q.correctIndex === undefined) isCorrect = null;
+    else isCorrect = state.selected === q.correctIndex;
+
   } else {
     isCorrect = state.selected === q.correctIndex;
   }
 
-  // ✅ Mistakes SOLO para tabla questions (no para practice_questions)
+  // Mistakes SOLO para tabla questions normal
   if (q.kind !== "practice_questions" && q.kind !== "official_test") {
-  if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
-  else if (state.mode === "mistakes") resolveMistake(q.id);
-}
+    if (isCorrect === false) upsertMistake(q.id, q.block, q.topic);
+    else if (state.mode === "mistakes" && isCorrect === true) resolveMistake(q.id);
+  }
 
   state.answers.push({
     id: q.id,
@@ -703,7 +721,7 @@ function goNext() {
     isCorrect,
   });
 
-  // ✅ Stats: se cuentan en total, pero byBlock solo si block válido (ya lo controla updateStatsOnAnswer)
+  // Stats: solo si evaluable
   updateStatsOnAnswer(stats, q.block, isCorrect);
 
   state.index++;
@@ -713,7 +731,7 @@ function goNext() {
 
   renderKpis();
 
-  // ✅ Si viene de Parte práctica: marcar completado automáticamente al finalizar
+  // Si viene de Parte práctica: marcar completado automáticamente
   if (q.kind === "practice_questions") {
     practicaDone[q.id] = true;
     savePracticaDone();
@@ -724,9 +742,10 @@ function goNext() {
 function finishTest() {
   stopTimer();
 
-  const correct = state.answers.filter(a => a.isCorrect).length;
-  const total = state.answers.length;
-  const pct = total ? Math.round((correct / total) * 100) : 0;
+  const graded = state.answers.filter(a => a.isCorrect !== null && a.isCorrect !== undefined);
+  const correct = graded.filter(a => a.isCorrect).length;
+  const total = graded.length;
+  const pct = total ? Math.round((correct / total) * 100) : null;
 
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "none";
@@ -737,10 +756,14 @@ function finishTest() {
   const mm = String(Math.floor(state.timeElapsed / 60)).padStart(2, "0");
   const ss = String(state.timeElapsed % 60).padStart(2, "0");
 
+  const scoreHtml = (pct === null)
+    ? `<div class="res__score">—</div><div class="res__line">Sin plantilla de respuestas (no se puede corregir).</div>`
+    : `<div class="res__score">${pct}%</div><div class="res__line">Correctas: <strong>${correct}</strong> · Incorrectas: <strong>${total - correct}</strong></div>`;
+
   resultsEl.innerHTML = `
     <div class="res">
-      <div class="res__score">${pct}%</div>
-      <div class="res__line">Correctas: <strong>${correct}</strong> · Incorrectas: <strong>${total - correct}</strong> · Tiempo: <strong>${mm}:${ss}</strong></div>
+      ${scoreHtml}
+      <div class="res__line">Tiempo: <strong>${mm}:${ss}</strong></div>
       <div class="res__actions">
         <button class="btn btn--ghost" id="resClose" type="button">Cerrar</button>
         <button class="btn btn--primary" id="resAgain" type="button">Repetir</button>
@@ -778,28 +801,13 @@ function stopTimer() {
   state.timer = null;
 }
 
-function normalizeOptions(opts) {
-  if (Array.isArray(opts)) return opts;
-  if (typeof opts === "string") {
-    try { return JSON.parse(opts); } catch { return [opts]; }
-  }
-  return [];
-}
-
-function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/* Practicals (tu sistema anterior, se mantiene) */
+/* =========================
+   Practicals (tu sistema anterior)
+========================= */
 function renderPractical(p) {
-  const bodyEl = modalEl.querySelector("#quizBody");
   const resultsEl = modalEl.querySelector("#quizResults");
   resultsEl.style.display = "none";
+  const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "block";
 
   modalEl.querySelector("#quizSub").textContent =
@@ -830,15 +838,13 @@ function renderPractical(p) {
   modalEl.querySelector("#quizNext").style.display = "none";
   modalEl.querySelector("#quizBarFill").style.width = "0%";
 
-  optsEl.querySelector("#savePractical").onclick = () => {
-    alert("Guardado (local).");
-  };
+  optsEl.querySelector("#savePractical").onclick = () => alert("Guardado (local).");
 
   optsEl.querySelector("#showSolution").onclick = () => {
     const box = optsEl.querySelector("#solutionBox");
     box.style.display = "block";
     box.innerHTML = `<strong>Guía</strong><br>${escapeHtml(p.solution || "Sin guía todavía.").replaceAll("\n","<br>")}`;
-    // Mermaid opcional
+
     if (p.assets?.mermaid && window.mermaid) {
       const id = "mmd_" + Math.random().toString(16).slice(2);
       box.innerHTML += `<div class="mermaid" id="${id}">${escapeHtml(p.assets.mermaid)}</div>`;
@@ -857,9 +863,7 @@ function escapeHtml(s) {
 }
 
 /* =========================
-   ✅ Parte práctica (Supabase)  REEMPLAZA TEMARIO
-   Reutiliza los IDs del temario:
-   - temarioList, temarioBlock, temarioSearch, temarioPct, temarioFill
+   Parte práctica (Supabase) — reusa IDs del temario
 ========================= */
 let practicaCache = [];
 let practicaDone = loadPracticaDone();
@@ -904,10 +908,9 @@ async function loadPractica() {
 
 function renderPractica() {
   const listEl = document.getElementById("temarioList");
-  const sel = document.getElementById("temarioBlock"); // lo usamos como filtro de “Supuesto”
+  const sel = document.getElementById("temarioBlock"); // filtro supuesto
   const q = (document.getElementById("temarioSearch")?.value || "").trim().toLowerCase();
 
-  // Filtro: “Supuesto” (I/II) o ALL
   const supuesto = sel?.value && sel.value !== "ALL" ? String(sel.value) : null;
 
   let items = [...practicaCache];
@@ -951,7 +954,6 @@ function renderPractica() {
     `;
   }).join("");
 
-  // Listeners
   listEl.querySelectorAll(".tema").forEach(row => {
     const id = row.dataset.id;
 
@@ -972,10 +974,8 @@ function renderPractica() {
 function openPracticeQuestion(item) {
   const correctIndex = correctOptionToIndex(item.correct_option);
 
-  // Convertimos tu fila de practice_questions a “question” compatible con el modal existente
   const q = {
     kind: "practice_questions",
-
     id: item.id,
     supuesto: String(item.supuesto || ""),
     is_reserve: !!item.is_reserve,
@@ -984,13 +984,12 @@ function openPracticeQuestion(item) {
     statement: item.statement || "",
     options: [item.option_a, item.option_b, item.option_c, item.option_d].map(x => x || ""),
 
-    correctIndex: (correctIndex === null ? 0 : correctIndex), // para evitar crash si faltara
+    correctIndex: (correctIndex === null ? 0 : correctIndex),
     correctRaw: (item.correct_option || "").toString(),
 
     explanation: "",
     reference: item.source_pdf || "",
 
-    // para compatibilidad con stats/mistakes:
     block: 0,
     topic: 0,
     difficulty: null,
@@ -1012,9 +1011,117 @@ function openPracticeQuestion(item) {
   renderQuestion();
 }
 
-// Hooks (reutilizan IDs del “temario” en HTML)
 document.getElementById("temarioBlock")?.addEventListener("change", renderPractica);
 document.getElementById("temarioSearch")?.addEventListener("input", renderPractica);
+
+/* =========================
+   Test oficial (TAI-2024) desde Supabase
+========================= */
+const officialTestSelect = document.getElementById("officialTestSelect");
+const btnOfficialPart1 = document.getElementById("btnOfficialPart1");
+const btnOfficialPart2 = document.getElementById("btnOfficialPart2");
+const officialTestMeta = document.getElementById("officialTestMeta");
+
+function letterToIndex(letter) {
+  const s = String(letter || "").trim().toUpperCase();
+  if (s === "A") return 0;
+  if (s === "B") return 1;
+  if (s === "C") return 2;
+  if (s === "D") return 3;
+  return null;
+}
+
+async function countOfficialParts(testCode) {
+  const { count: c1, error: e1 } = await sb
+    .from("official_test_questions")
+    .select("*", { count: "exact", head: true })
+    .eq("test_code", testCode)
+    .eq("part", 1);
+
+  const { count: c2, error: e2 } = await sb
+    .from("official_test_questions")
+    .select("*", { count: "exact", head: true })
+    .eq("test_code", testCode)
+    .eq("part", 2);
+
+  if (e1 || e2) {
+    if (officialTestMeta) officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
+    return;
+  }
+
+  if (officialTestMeta) officialTestMeta.textContent =
+    `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
+}
+
+async function fetchOfficialTest({ testCode, part }) {
+  const { data, error } = await sb
+    .from("official_test_questions")
+    .select("id,test_code,part,question_number,statement,option_a,option_b,option_c,option_d,correct_option,is_reserve")
+    .eq("test_code", testCode)
+    .eq("part", Number(part))
+    .order("is_reserve", { ascending: true })
+    .order("question_number", { ascending: true });
+
+  if (error) throw error;
+
+  return (data || []).map(r => ({
+    kind: "official_test",
+    id: r.id,
+    testCode: r.test_code,
+    part: r.part,
+    is_reserve: !!r.is_reserve,
+    question_number: r.question_number,
+
+    block: 0,
+    topic: 0,
+    difficulty: null,
+
+    statement: r.statement,
+    options: [r.option_a, r.option_b, r.option_c, r.option_d],
+    correctIndex: letterToIndex(r.correct_option), // puede ser null
+    explanation: "",
+    reference: "",
+  }));
+}
+
+async function startOfficialPart(part) {
+  try {
+    const testCode = officialTestSelect?.value || "TAI-2024";
+    const qs = await fetchOfficialTest({ testCode, part });
+
+    if (!qs.length) {
+      alert(`No hay preguntas cargadas para ${testCode} Parte ${part}. Importa el CSV en Supabase.`);
+      return;
+    }
+
+    // modo examen: sin corrección inmediata
+    state.examHardMode = true;
+    state.mode = "exam";
+    state.practiceKind = "test";
+
+    state.questions = qs;
+    state.index = 0;
+    state.selected = null;
+    state.answers = [];
+    state.timeElapsed = 0;
+
+    openModal();
+    renderQuestion();
+    startTimerIfNeeded(); // sin límite fijo
+  } catch (e) {
+    console.error(e);
+    alert("Error cargando test oficial: " + (e?.message || JSON.stringify(e)));
+  }
+}
+
+btnOfficialPart1?.addEventListener("click", () => startOfficialPart(1));
+btnOfficialPart2?.addEventListener("click", () => startOfficialPart(2));
+
+officialTestSelect?.addEventListener("change", () => {
+  countOfficialParts(officialTestSelect.value);
+});
+
+if (officialTestSelect) countOfficialParts(officialTestSelect.value);
 
 /* =========================
    Coach Drawer (right slide)
@@ -1038,6 +1145,7 @@ function closeCoach() {
   coachDrawer.classList.remove("is-open");
   coachDrawer.setAttribute("aria-hidden", "true");
 }
+
 coachFab?.addEventListener("click", openCoach);
 coachClose?.addEventListener("click", closeCoach);
 coachDrawer?.addEventListener("click", (e) => {
@@ -1116,7 +1224,7 @@ coachClear?.addEventListener("click", () => {
 });
 
 /* =========================
-   PWA Install button (works)
+   PWA Install button
 ========================= */
 let deferredPrompt = null;
 const btnInstall = document.getElementById("btnInstall");
@@ -1140,143 +1248,14 @@ btnInstall?.addEventListener("click", async () => {
 ========================= */
 initTestsUI();
 renderKpis();
-
-// ✅ Antes: loadTemario(); Ahora: loadPractica();
 loadPractica();
-/* =========================
-   Test oficial (TAI-2024) desde Supabase
-========================= */
-const officialTestSelect = document.getElementById("officialTestSelect");
-const btnOfficialPart1 = document.getElementById("btnOfficialPart1");
-const btnOfficialPart2 = document.getElementById("btnOfficialPart2");
-const officialTestMeta = document.getElementById("officialTestMeta");
-
-function letterToIndex(letter) {
-  const s = String(letter || "").trim().toUpperCase();
-  if (s === "A") return 0;
-  if (s === "B") return 1;
-  if (s === "C") return 2;
-  if (s === "D") return 3;
-  return null;
-}
-
-async function countOfficialParts(testCode) {
-  // cuenta preguntas por parte para mostrarlo en el hint
-  const { data, error } = await sb
-    .from("official_test_questions")
-    .select("part", { count: "exact", head: false })
-    .eq("test_code", testCode);
-
-  if (error) {
-    if (officialTestMeta) officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
-    return;
-  }
-
-  // data trae filas; mejor contar por query directa:
-  const { count: c1 } = await sb
-    .from("official_test_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("test_code", testCode)
-    .eq("part", 1);
-
-  const { count: c2 } = await sb
-    .from("official_test_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("test_code", testCode)
-    .eq("part", 2);
-
-  if (officialTestMeta) officialTestMeta.textContent =
-    `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
-}
-
-async function fetchOfficialTest({ testCode, part }) {
-  const { data, error } = await sb
-    .from("official_test_questions")
-    .select("id,test_code,part,question_number,statement,option_a,option_b,option_c,option_d,correct_option,is_reserve")
-    .eq("test_code", testCode)
-    .eq("part", Number(part))
-    .order("is_reserve", { ascending: true })
-    .order("question_number", { ascending: true });
-
-  if (error) throw error;
-
-  return (data || []).map(r => ({
-    kind: "official_test",
-    id: r.id,
-    testCode: r.test_code,
-    part: r.part,
-    is_reserve: !!r.is_reserve,
-    question_number: r.question_number,
-
-    // compatibilidad con el modal
-    block: 0,
-    topic: 0,
-    difficulty: null,
-
-    statement: r.statement,
-    options: [r.option_a, r.option_b, r.option_c, r.option_d],
-    correctIndex: letterToIndex(r.correct_option), // puede ser null
-    explanation: "",
-    reference: "",
-  }));
-}
-
-async function startOfficialPart(part) {
-  try {
-    const testCode = officialTestSelect?.value || "TAI-2024";
-    const qs = await fetchOfficialTest({ testCode, part });
-
-    if (!qs.length) {
-      alert(`No hay preguntas cargadas para ${testCode} Parte ${part}. Importa el CSV en Supabase.`);
-      return;
-    }
-
-    // modo examen: sin corrección inmediata
-    state.examHardMode = true;
-    state.mode = "exam";
-    state.practiceKind = "test";
-
-    // si quieres usar el toggle de temporizador, respeta state.timerEnabled tal cual
-    state.questions = qs;
-    state.index = 0;
-    state.selected = null;
-    state.answers = [];
-    state.timeElapsed = 0;
-
-    openModal();
-    renderQuestion();
-    startTimerIfNeeded(); // cuenta tiempo, sin límite fijo
-  } catch (e) {
-    console.error(e);
-    alert("Error cargando test oficial: " + (e?.message || JSON.stringify(e)));
-  }
-}
-
-btnOfficialPart1?.addEventListener("click", () => startOfficialPart(1));
-btnOfficialPart2?.addEventListener("click", () => startOfficialPart(2));
-
-officialTestSelect?.addEventListener("change", () => {
-  const code = officialTestSelect.value;
-  countOfficialParts(code);
-});
-
-// init del widget
-if (officialTestSelect) countOfficialParts(officialTestSelect.value);
 
 // Arranque coach mensaje
 coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
 
+// Arranque en Start
 showScreen("start");
 document.getElementById("enterAppBtn")?.addEventListener("click", () => {
   showScreen("home");
-  // opcional: abrir coach con un pequeño delay para que la animación sea suave
   setTimeout(() => openCoach(), 180);
 });
-
-
-
-
-
-
-
-
