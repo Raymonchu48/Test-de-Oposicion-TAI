@@ -25,6 +25,37 @@
 
   <!-- App -->
   <main class="app" id="app">
+   <!-- START / SPLASH -->
+<section class="screen is-active" id="screen-start" data-screen="start">
+  <section class="card glass start-card">
+    <div class="start">
+      <div class="start__brand">
+        <div class="start__logo">OpoStudy</div>
+        <div class="start__tag">Preparación TAI · Tests inteligentes + Parte práctica</div>
+      </div>
+
+      <div class="start__hero">
+        <img class="start__coach" src="./coach.png" alt="Coach" loading="lazy">
+        <div class="start__copy">
+          <div class="start__headline">Entrena como en examen.</div>
+          <div class="start__text">
+            Tests por bloques, repaso de fallos, y prácticos reales desde Supabase.
+          </div>
+        </div>
+      </div>
+
+      <div class="start__actions">
+        <button class="btn btn--primary start__enter" id="enterAppBtn" type="button">Entrar</button>
+        <button class="btn btn--ghost" type="button" data-go="tests">Ir a Tests</button>
+        <button class="btn btn--ghost" type="button" data-go="temario">Ir a Práctica</button>
+      </div>
+
+      <div class="hint start__hint">
+        Tip: pulsa “Entrar” y te abro el Coach para recomendarte el siguiente paso.
+      </div>
+    </div>
+  </section>
+</section> 
     <!-- HOME -->
     <section class="screen is-active" id="screen-home" data-screen="home">
       <div class="grid">
@@ -329,3 +360,4 @@
   <script src="./app.js?v=100"></script>
 </body>
 </html>
+
