@@ -685,7 +685,7 @@ body.has-modal-open .bottom-nav{ display: none !important; }
 .modal{ z-index: 9999; }
 .modal__panel{
   border: 1px solid rgba(255,255,255,.14);
-  background: rgba(15, 25, 35, .72);
+  background: rgba(20, 35, 48, .66);
   box-shadow: 0 20px 80px rgba(0,0,0,.55);
   backdrop-filter: blur(10px);
 }
@@ -853,3 +853,4 @@ body.has-modal-open .bottom-nav{ display: none !important; }
   color: rgba(255,255,255,.96);
   background: rgba(0,0,0,.10);
 }
+
