@@ -648,3 +648,35 @@ body::before{
   height: 100%;
   display: block;
 }
+
+/* ===== Modal overlay: FIX para que no se vea raro y tape toda la app ===== */
+.modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999; /* por encima de bottom-nav */
+}
+
+.modal.is-open{ display: flex; }
+
+.modal__backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+
+/* Panel centrado, con scroll interno */
+.modal__panel{
+  position: relative;
+  width: min(980px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  border-radius: 16px;
+}
+
+/* Cuando el modal está abierto, oculto la barra inferior */
+body.has-modal-open .bottom-nav{ display: none !important; }
