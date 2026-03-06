@@ -953,3 +953,116 @@ body[data-screen="start"] #coachFab { display: none !important; }
 #modeSegment .segmented__btn:hover{
   background: rgba(255,255,255,.06);
 }
+
+/* ===== START / SPLASH: fondo + centrado + botón heartbeat ===== */
+
+/* En START: quitamos banner y dejamos fondo limpio */
+body[data-screen="start"] .topbar--banner{ display:none !important; }
+body[data-screen="start"] .bottom-nav{ display:none !important; }
+body[data-screen="start"] #coachFab{ display:none !important; }
+
+/* En START: el contenedor app ocupa toda la pantalla */
+body[data-screen="start"] .app{
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Fondo específico de START */
+body[data-screen="start"]{
+  background: url("./tecnologia-gradiente.avif") center/cover no-repeat fixed !important;
+  background-color: #061a24 !important;
+}
+body[data-screen="start"]::before{
+  background: none !important; /* quita el tint general para que se vea el gradiente */
+}
+
+/* Start screen a pantalla completa */
+#screen-start{
+  min-height: 100vh;
+}
+.start-full{
+  min-height: 100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 28px 18px;
+}
+
+/* Zona central (entre líneas): un pelín más arriba del centro geométrico */
+.start-center{
+  width: min(920px, 92vw);
+  transform: translateY(-6%);
+  text-align: left;
+}
+
+/* Título y subtítulo */
+.start-title{
+  margin: 0 0 10px;
+  font-size: clamp(48px, 6vw, 84px);
+  font-weight: 950;
+  color: var(--neon);
+  letter-spacing: .2px;
+  text-shadow: 0 0 22px rgba(255,60,90,.22);
+}
+.start-subtitle{
+  margin: 0 0 22px;
+  font-size: clamp(16px, 1.8vw, 20px);
+  font-weight: 900;
+  color: rgba(255,255,255,.90);
+  text-shadow: 0 14px 30px rgba(0,0,0,.22);
+}
+
+/* Botón START (glass + heartbeat) */
+.start-btn{
+  display:inline-flex;
+  align-items:center;
+  gap: 10px;
+  padding: 14px 18px;
+  min-width: 210px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: rgba(255,255,255,.10);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  font-weight: 950;
+  letter-spacing: .6px;
+  color: rgba(255,255,255,.96);
+  cursor:pointer;
+  user-select:none;
+
+  box-shadow: 0 18px 50px rgba(0,0,0,.28);
+  transition: transform .10s ease, background .12s ease, border-color .12s ease;
+}
+.start-btn:hover{
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.26);
+}
+
+/* Corazón neón + animación */
+.start-btn__heart{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width: 34px;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255,60,90,.18);
+  border: 1px solid rgba(255,60,90,.45);
+  box-shadow: 0 12px 30px rgba(255,60,90,.18);
+}
+.start-btn__heart svg{
+  fill: var(--neon);
+  filter: drop-shadow(0 0 10px rgba(255,60,90,.25));
+  animation: heartBeat 1.15s ease-in-out infinite;
+}
+
+@keyframes heartBeat{
+  0%, 100% { transform: scale(1); }
+  14%      { transform: scale(1.10); }
+  28%      { transform: scale(1.00); }
+  42%      { transform: scale(1.12); }
+  70%      { transform: scale(1.00); }
+}
