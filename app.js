@@ -530,6 +530,8 @@ function openModal() {
   ensureModal();
   modalEl.classList.add("is-open");
   document.body.classList.add("no-scroll");
+  document.body.classList.add("has-modal-open"); // ✅ oculta bottom-nav
+
   // re-habilitar botones de test por si venimos de práctico
   modalEl.querySelector("#quizPrev").style.display = "";
   modalEl.querySelector("#quizNext").style.display = "";
@@ -540,6 +542,7 @@ function closeModal() {
   if (!modalEl) return;
   modalEl.classList.remove("is-open");
   document.body.classList.remove("no-scroll");
+  document.body.classList.remove("has-modal-open"); // ✅ vuelve a mostrar bottom-nav
 }
 
 function renderQuestion() {
@@ -1135,4 +1138,5 @@ coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2
 
 // Arrancar en Home
 showScreen("home");
+
 
