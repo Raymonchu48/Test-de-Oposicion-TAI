@@ -931,3 +931,8 @@ body.has-modal-open .bottom-nav{ display: none !important; }
   .start__coach{ width: 56px; height: 56px; }
   .start__enter{ min-width: unset; flex: 1; }
 }
+/* Ocultar bottom-nav en pantalla Start */
+body[data-screen="start"] .bottom-nav { display: none !important; }
+
+/* Opcional: también ocultar el FAB del coach en Start */
+body[data-screen="start"] #coachFab { display: none !important; }
