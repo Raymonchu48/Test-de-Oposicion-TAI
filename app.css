@@ -806,45 +806,50 @@ body.has-modal-open .bottom-nav{ display: none !important; }
 .quiz__barFill{ height: 10px; border-radius: 999px; }
 /* ===== Ajuste contraste + A/B/C/D en rojo corporativo ===== */
 
-/* 1) Texto general del modal más claro */
+/* ===== Ajuste contraste + A/B/C/D usando tu --neon ===== */
+
+/* Texto del modal más legible */
 .modal .quiz,
-.modal .quiz__q,
 .modal .quiz__sub,
 .modal .opt__text,
 .modal .quiz__explain{
-  color: rgba(255,255,255,.92);
+  color: rgba(255,255,255,.94);
 }
 
-/* Subtítulo un pelín menos que el título, pero legible */
-.modal .quiz__sub{
-  color: rgba(255,255,255,.80);
-}
-
-/* 2) Pregunta (enunciado) más brillante */
+/* Enunciado: aún más claro */
 .modal .quiz__q{
-  color: rgba(255,255,255,.96);
+  color: rgba(255,255,255,.98);
 }
 
-/* 3) Letra/Badge A B C D en rojo (usa el rojo que ya tienes en la app) */
-:root{
-  --opostudy-red: #ff4d5a; /* si tu rojo real es otro, cámbialo aquí */
-}
-
+/* Badge A/B/C/D en el rojo corporativo */
 .modal .opt__key{
   color: #fff;
-  background: color-mix(in srgb, var(--opostudy-red) 26%, rgba(255,255,255,.06));
-  border-color: color-mix(in srgb, var(--opostudy-red) 55%, rgba(255,255,255,.10));
-  box-shadow: 0 8px 22px rgba(255,77,90,.18);
+  background: rgba(255,60,90,.22);          /* var(--neon) con alpha */
+  border-color: rgba(255,60,90,.55);
+  box-shadow: 0 10px 26px rgba(255,60,90,.18);
 }
 
-/* 4) Cuando está seleccionada: reforzar el rojo en el badge */
+/* Seleccionada: más neón */
 .modal .opt.is-selected .opt__key{
-  background: color-mix(in srgb, var(--opostudy-red) 40%, rgba(255,255,255,.08));
-  border-color: var(--opostudy-red);
+  background: rgba(255,60,90,.32);
+  border-color: rgba(255,60,90,.85);
+  box-shadow: 0 12px 30px rgba(255,60,90,.22);
 }
 
-/* 5) Si la opción es "code": texto un poco más claro y caja menos oscura */
+/* En modo correcto/incorrecto, el badge acompaña */
+.modal .opt.is-correct .opt__key{
+  background: rgba(0,200,120,.22);
+  border-color: rgba(0,200,120,.70);
+  box-shadow: 0 12px 28px rgba(0,200,120,.18);
+}
+.modal .opt.is-wrong .opt__key{
+  background: rgba(255,80,80,.22);
+  border-color: rgba(255,80,80,.70);
+  box-shadow: 0 12px 28px rgba(255,80,80,.18);
+}
+
+/* Caja de "código" un pelín menos oscura */
 .modal .opt.is-code .opt__text{
-  color: rgba(255,255,255,.94);
-  background: rgba(0,0,0,.12);
+  color: rgba(255,255,255,.96);
+  background: rgba(0,0,0,.10);
 }
