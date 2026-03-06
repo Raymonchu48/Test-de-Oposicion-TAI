@@ -1147,9 +1147,8 @@ document.getElementById("enterAppBtn")?.addEventListener("click", () => {
   // opcional: abrir coach con un pequeño delay para que la animación sea suave
   setTimeout(() => openCoach(), 180);
 });
-/* Oculta nav inferior en splash */
-.screen[data-screen="start"] ~ .bottom-nav { display:none; } /* fallback */
-body[data-screen="start"] .bottom-nav { display:none; }
+
+
 
 
 
