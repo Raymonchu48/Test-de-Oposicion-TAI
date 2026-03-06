@@ -580,6 +580,10 @@ function renderQuestion() {
       <span class="opt__text"></span>
     `;
     btn.querySelector(".opt__text").textContent = text;
+    // Si la opción tiene pinta de código/HTML, la pinto como "code chip"
+const t = String(text || "");
+const looksCode = t.includes("<") || t.includes(">") || t.includes("{") || t.includes("}") || t.includes(";") || t.includes("=>");
+if (looksCode) btn.classList.add("is-code");
 
     btn.addEventListener("click", () => selectOption(i));
     optsEl.appendChild(btn);
@@ -1138,5 +1142,6 @@ coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2
 
 // Arrancar en Home
 showScreen("home");
+
 
 
