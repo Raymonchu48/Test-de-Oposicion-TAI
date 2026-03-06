@@ -936,3 +936,20 @@ body[data-screen="start"] .bottom-nav { display: none !important; }
 
 /* Opcional: también ocultar el FAB del coach en Start */
 body[data-screen="start"] #coachFab { display: none !important; }
+/* ===== Segmented (Modo): texto blanco para mejor legibilidad ===== */
+#modeSegment .segmented__btn{
+  color: rgba(255,255,255,.92) !important;
+  text-shadow: 0 10px 22px rgba(0,0,0,.22);
+}
+
+/* Botón activo: blanco total + fondo un poco más visible */
+#modeSegment .segmented__btn.is-active{
+  color: rgba(255,255,255,1) !important;
+  background: rgba(4,151,167,.22) !important;
+  box-shadow: inset 0 0 0 1px rgba(4,151,167,.40), 0 0 18px rgba(4,151,167,.18);
+}
+
+/* Hover (opcional): un pelín más claro */
+#modeSegment .segmented__btn:hover{
+  background: rgba(255,255,255,.06);
+}
