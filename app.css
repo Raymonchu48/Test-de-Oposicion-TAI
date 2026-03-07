@@ -1045,6 +1045,7 @@ body[data-screen="start"]::before{
 .start-btn--pulse{
   animation: btnBeat 1.25s ease-in-out infinite;
   transform-origin: center;
+  will-change:transform;
 }
 
 /* Latido: 2 pulsos rápidos y descanso */
@@ -1070,4 +1071,5 @@ body[data-screen="start"]::before{
 @media (prefers-reduced-motion: reduce){
   .start-btn--pulse{ animation: none; }
 }
+
 
