@@ -1,4 +1,4 @@
-// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Test oficial + Coach (Edge Function) + PWA)
+// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Test oficial + Coach (Edge Function offline) + PWA)
 
 const { createClient } = window.supabase;
 
@@ -13,32 +13,59 @@ if (window.mermaid) {
 }
 
 /* =========================
-   Globals
-========================= */
-let modalEl = null;
-
-/* =========================
    Storage
 ========================= */
 const STORAGE_KEY = "opostudy_stats_v2";
 const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
 const STORAGE_PRACTICA_DONE = "opostudy_practica_done_v1";
+const STORAGE_CLIENT_ID = "opostudy_client_id_v1";
+
 const MISTAKES_LOOKBACK_DAYS = 30;
 
 /* =========================
-   Client ID (sin login)
+   Helpers
 ========================= */
-const COACH_CLIENT_ID_KEY = "opostudy_client_id_v1";
-
-function getClientId() {
-  let id = localStorage.getItem(COACH_CLIENT_ID_KEY);
-  if (!id) {
-    id = (crypto?.randomUUID?.() || ("cid_" + Math.random().toString(16).slice(2)));
-    localStorage.setItem(COACH_CLIENT_ID_KEY, id);
-  }
-  return id;
+function escapeHtml(s) {
+  return String(s ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
-const clientId = getClientId();
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = String(val);
+}
+
+function shuffleArray(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function normalizeOptions(opts) {
+  if (Array.isArray(opts)) return opts;
+  if (typeof opts === "string") {
+    try { return JSON.parse(opts); } catch { return [opts]; }
+  }
+  return [];
+}
+
+function ensureClientId() {
+  let cid = localStorage.getItem(STORAGE_CLIENT_ID);
+  if (cid) return cid;
+
+  // No login: id local persistente
+  const rand = Math.random().toString(16).slice(2);
+  cid = `cid_${Date.now().toString(16)}_${rand}`;
+  localStorage.setItem(STORAGE_CLIENT_ID, cid);
+  return cid;
+}
 
 /* =========================
    Navigation (screens)
@@ -56,18 +83,24 @@ function showScreen(name) {
   const coachFab = document.getElementById("coachFab");
   if (coachFab) coachFab.style.display = (name === "home") ? "inline-flex" : "none";
 
-  // si sales de home, cierro drawer para no “romper” móvil
+  // Si sales de home, cierro drawer para no “romper” móvil
   if (name !== "home") closeCoach();
 
-  // si hay modal abierto y navegas, lo cierro
+  // Si hay modal abierto y navegas, lo cierro
   if (modalEl && modalEl.classList.contains("is-open")) closeModal();
 }
 
 navBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.nav)));
 goBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.go)));
 
+// Start -> Home
+document.getElementById("enterAppBtn")?.addEventListener("click", () => {
+  showScreen("home");
+  setTimeout(() => openCoach(), 180);
+});
+
 /* =========================
-   Stats + Mistakes (local)
+   Stats + Mistakes
 ========================= */
 function loadStats() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -150,15 +183,13 @@ function getPendingMistakesCount(block = null) {
 }
 
 function updateStatsOnAnswer(stats, block, isCorrect) {
-  // si no se puede corregir (null), no tocamos stats
-  if (isCorrect === null || isCorrect === undefined) return;
-
   stats.totalAnswered++;
   if (isCorrect) stats.totalCorrect++;
 
   // byBlock solo si block es 1..4
   const bNum = Number(block);
   const isValidBlock = [1, 2, 3, 4].includes(bNum);
+
   if (isValidBlock) {
     const b = String(bNum);
     if (!stats.byBlock[b]) stats.byBlock[b] = { a: 0, c: 0 };
@@ -180,17 +211,12 @@ function updateStatsOnAnswer(stats, block, isCorrect) {
   saveStats(stats);
 }
 
-/* Render KPIs */
 const stats = loadStats();
-
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = String(val);
-}
 
 function renderBlockBars() {
   const el = document.getElementById("blockBars");
   if (!el) return;
+
   const blocks = ["1", "2", "3", "4"].map(b => {
     const a = stats.byBlock?.[b]?.a || 0;
     const c = stats.byBlock?.[b]?.c || 0;
@@ -231,7 +257,7 @@ function renderKpis() {
   renderBlockBars();
 }
 
-/* Reset buttons */
+// Reset buttons
 document.getElementById("resetStats")?.addEventListener("click", () => {
   if (!confirm("¿Resetear stats locales?")) return;
   localStorage.removeItem(STORAGE_KEY);
@@ -270,9 +296,6 @@ const state = {
   timer: null,
 
   examHardMode: false,
-
-  // contexto para coach
-  currentOfficial: null,        // { testCode, part } o null
 };
 
 function initTestsUI() {
@@ -325,27 +348,31 @@ function setMode(mode, opts = {}) {
   }
 
   if (mode === "full") {
-    blockSelect.value = "";
+    if (blockSelect) blockSelect.value = "";
     state.block = null;
-    blockSelect.disabled = true;
-    blockHint.style.display = "block";
-    blockHint.textContent = "En modo “Completo” no hace falta elegir bloque.";
+    if (blockSelect) blockSelect.disabled = true;
+    if (blockHint) {
+      blockHint.style.display = "block";
+      blockHint.textContent = "En modo “Completo” no hace falta elegir bloque.";
+    }
   } else if (mode === "mistakes") {
-    blockSelect.disabled = false;
-    blockHint.style.display = "block";
-    blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
+    if (blockSelect) blockSelect.disabled = false;
+    if (blockHint) {
+      blockHint.style.display = "block";
+      blockHint.textContent = `Se usarán tus fallos guardados (últimos ${MISTAKES_LOOKBACK_DAYS} días). El bloque es opcional y sirve como filtro.`;
+    }
   } else {
-    blockSelect.disabled = false;
-    blockHint.style.display = "none";
+    if (blockSelect) blockSelect.disabled = false;
+    if (blockHint) blockHint.style.display = "none";
   }
 
   if (!opts.silent) {
-    if (mode === "full" && Number(countSelect.value) < 30) {
-      countSelect.value = "30";
+    if (mode === "full" && Number(countSelect?.value || 0) < 30) {
+      if (countSelect) countSelect.value = "30";
       state.count = 30;
     }
-    if ((mode === "exam" || mode === "practice") && Number(countSelect.value) > 15) {
-      countSelect.value = "15";
+    if ((mode === "exam" || mode === "practice") && Number(countSelect?.value || 0) > 15) {
+      if (countSelect) countSelect.value = "15";
       state.count = 15;
     }
   }
@@ -364,25 +391,7 @@ function syncStartEnabled() {
   startBtn.disabled = !ok;
 }
 
-/* Helpers */
-function normalizeOptions(opts) {
-  if (Array.isArray(opts)) return opts;
-  if (typeof opts === "string") {
-    try { return JSON.parse(opts); } catch { return [opts]; }
-  }
-  return [];
-}
-
-function shuffleArray(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
-
-/* Fetchers */
+/* Fetchers banco de preguntas */
 async function fetchQuestions({ mode, block, count }) {
   const params = {
     p_count: Number(count),
@@ -394,7 +403,7 @@ async function fetchQuestions({ mode, block, count }) {
   if (error) throw error;
 
   return (data || []).map(q => ({
-    kind: "db_questions",
+    kind: "bank",
     id: q.id,
     block: q.block,
     topic: q.topic,
@@ -418,7 +427,7 @@ async function fetchMistakeQuestions() {
   if (error) throw error;
 
   return shuffleArray(data || []).map(q => ({
-    kind: "db_questions",
+    kind: "bank",
     id: q.id,
     block: q.block,
     topic: q.topic,
@@ -431,6 +440,7 @@ async function fetchMistakeQuestions() {
   }));
 }
 
+/* Practicals (tu sistema anterior) */
 async function startPractical() {
   if (!state.block) {
     alert("Selecciona un bloque para ver el trabajo práctico.");
@@ -449,8 +459,6 @@ async function startPractical() {
     return;
   }
 
-  state.currentOfficial = null;
-
   openModal();
   renderPractical(data[0]);
 }
@@ -458,7 +466,6 @@ async function startPractical() {
 async function startTest() {
   try {
     state.examHardMode = false;
-    state.currentOfficial = null;
 
     if (state.mode === "practice" && state.practiceKind === "practical") {
       await startPractical();
@@ -494,7 +501,6 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
   try {
     state.examHardMode = true;
     state.mode = "exam";
-    state.currentOfficial = null;
 
     const examBlock = document.getElementById("examBlock")?.value || "";
     const blk = examBlock ? Number(examBlock) : null;
@@ -517,9 +523,9 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
   }
 });
 
-/* =========================
-   Modal UI
-========================= */
+/* Modal UI */
+let modalEl = null;
+
 function ensureModal() {
   if (modalEl) return modalEl;
 
@@ -565,8 +571,8 @@ function ensureModal() {
   modalEl.addEventListener("click", (e) => {
     if (e.target?.dataset?.close) closeModal();
   });
-
   modalEl.querySelector("#quizCloseBtn").addEventListener("click", () => closeModal());
+
   modalEl.querySelector("#quizPrev").addEventListener("click", () => goPrev());
   modalEl.querySelector("#quizNext").addEventListener("click", () => goNext());
 
@@ -578,8 +584,6 @@ function openModal() {
   modalEl.classList.add("is-open");
   document.body.classList.add("no-scroll");
   document.body.classList.add("has-modal-open");
-
-  // por si venimos de práctico (que los oculta)
   modalEl.querySelector("#quizPrev").style.display = "";
   modalEl.querySelector("#quizNext").style.display = "";
 }
@@ -600,7 +604,7 @@ function renderQuestion() {
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "block";
 
-  // Subtítulo
+  // Subtítulos por tipo
   if (q.kind === "practice_questions") {
     modalEl.querySelector("#quizSub").textContent =
       `Supuesto ${q.supuesto} · Pregunta ${q.question_number}${q.is_reserve ? " (Reserva)" : ""}`;
@@ -631,7 +635,7 @@ function renderQuestion() {
     `;
     btn.querySelector(".opt__text").textContent = text;
 
-    // si parece código/HTML, estilo monospace
+    // pinta como código si parece HTML/JS
     const t = String(text || "");
     const looksCode = t.includes("<") || t.includes(">") || t.includes("{") || t.includes("}") || t.includes(";") || t.includes("=>");
     if (looksCode) btn.classList.add("is-code");
@@ -642,6 +646,7 @@ function renderQuestion() {
 
   const pct = (state.index / state.questions.length) * 100;
   modalEl.querySelector("#quizBarFill").style.width = `${pct}%`;
+
   modalEl.querySelector("#quizPrev").disabled = state.index === 0;
 
   const ex = modalEl.querySelector("#quizExplain");
@@ -663,12 +668,10 @@ function selectOption(i) {
     !state.examHardMode;
 
   if (showImmediateCorrection) {
-    const hasCorrect = Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3;
-
-    // Pintar correcto/incorrecto
+    // si hay correcta definida (para practice_questions puede ser ANULADA)
     if (q.kind === "practice_questions") {
       const raw = (q.correctRaw || "").toString().trim().toUpperCase();
-      if (raw !== "ANULADA" && hasCorrect) {
+      if (raw !== "ANULADA" && Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3) {
         modalEl.querySelectorAll(".opt").forEach((b) => {
           const idx = Number(b.dataset.index);
           if (idx === q.correctIndex) b.classList.add("is-correct");
@@ -676,28 +679,21 @@ function selectOption(i) {
         });
       }
     } else {
-      if (hasCorrect) {
-        modalEl.querySelectorAll(".opt").forEach((b) => {
-          const idx = Number(b.dataset.index);
-          if (idx === q.correctIndex) b.classList.add("is-correct");
-          if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
-        });
-      }
+      modalEl.querySelectorAll(".opt").forEach((b) => {
+        const idx = Number(b.dataset.index);
+        if (idx === q.correctIndex) b.classList.add("is-correct");
+        if (idx === i && i !== q.correctIndex) b.classList.add("is-wrong");
+      });
     }
 
-    // Texto de corrección
     const ex = modalEl.querySelector("#quizExplain");
     ex.style.display = "block";
 
     if (q.kind === "practice_questions") {
       const raw = (q.correctRaw || "").toString().trim().toUpperCase();
       if (raw === "ANULADA" || q.correctIndex < 0) ex.textContent = "Pregunta anulada.";
-      else if (raw === "A" || raw === "B" || raw === "C" || raw === "D") ex.textContent = `Respuesta correcta: ${raw}.`;
+      else if (["A", "B", "C", "D"].includes(raw)) ex.textContent = `Respuesta correcta: ${raw}.`;
       else ex.textContent = "Respuesta correcta no disponible.";
-    } else if (q.kind === "official_test") {
-      // Si hay plantilla, enseña; si no, indica
-      if (q.correctIndex === null || q.correctIndex === undefined) ex.textContent = "Sin plantilla de respuestas (no se puede corregir).";
-      else ex.textContent = `Respuesta correcta: ${String.fromCharCode(65 + q.correctIndex)}.`;
     } else {
       ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
     }
@@ -717,26 +713,25 @@ function goNext() {
 
   const q = state.questions[state.index];
 
-  // Evaluación (puede ser null si no hay plantilla)
+  // Evaluación segura
   let isCorrect = false;
-
   if (q.kind === "practice_questions") {
     const raw = (q.correctRaw || "").toString().trim().toUpperCase();
     if (raw === "ANULADA" || q.correctIndex < 0) isCorrect = true;
     else isCorrect = state.selected === q.correctIndex;
-
   } else if (q.kind === "official_test") {
-    if (q.correctIndex === null || q.correctIndex === undefined) isCorrect = null;
-    else isCorrect = state.selected === q.correctIndex;
-
+    // En oficial, normalmente no mostramos corrección inmediata (modo examen)
+    // Si no hay correctIndex, no evaluamos como fallo
+    if (Number.isInteger(q.correctIndex)) isCorrect = state.selected === q.correctIndex;
+    else isCorrect = true;
   } else {
     isCorrect = state.selected === q.correctIndex;
   }
 
-  // Mistakes SOLO para preguntas normales
-  if (q.kind !== "practice_questions" && q.kind !== "official_test") {
-    if (isCorrect === false) upsertMistake(q.id, q.block, q.topic);
-    else if (state.mode === "mistakes" && isCorrect === true) resolveMistake(q.id);
+  // Mistakes SOLO para banco general
+  if (q.kind === "bank") {
+    if (!isCorrect) upsertMistake(q.id, q.block, q.topic);
+    else if (state.mode === "mistakes") resolveMistake(q.id);
   }
 
   state.answers.push({
@@ -757,7 +752,7 @@ function goNext() {
 
   renderKpis();
 
-  // Si viene de Parte práctica: marcar completado automáticamente
+  // marca completado en parte práctica tras resolver
   if (q.kind === "practice_questions") {
     practicaDone[q.id] = true;
     savePracticaDone();
@@ -768,10 +763,9 @@ function goNext() {
 function finishTest() {
   stopTimer();
 
-  const graded = state.answers.filter(a => a.isCorrect !== null && a.isCorrect !== undefined);
-  const correct = graded.filter(a => a.isCorrect).length;
-  const total = graded.length;
-  const pct = total ? Math.round((correct / total) * 100) : null;
+  const correct = state.answers.filter(a => a.isCorrect).length;
+  const total = state.answers.length;
+  const pct = total ? Math.round((correct / total) * 100) : 0;
 
   const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "none";
@@ -782,14 +776,10 @@ function finishTest() {
   const mm = String(Math.floor(state.timeElapsed / 60)).padStart(2, "0");
   const ss = String(state.timeElapsed % 60).padStart(2, "0");
 
-  const scoreHtml = (pct === null)
-    ? `<div class="res__score">—</div><div class="res__line">Sin plantilla de respuestas (no se puede corregir).</div>`
-    : `<div class="res__score">${pct}%</div><div class="res__line">Correctas: <strong>${correct}</strong> · Incorrectas: <strong>${total - correct}</strong></div>`;
-
   resultsEl.innerHTML = `
     <div class="res">
-      ${scoreHtml}
-      <div class="res__line">Tiempo: <strong>${mm}:${ss}</strong></div>
+      <div class="res__score">${pct}%</div>
+      <div class="res__line">Correctas: <strong>${correct}</strong> · Incorrectas: <strong>${total - correct}</strong> · Tiempo: <strong>${mm}:${ss}</strong></div>
       <div class="res__actions">
         <button class="btn btn--ghost" id="resClose" type="button">Cerrar</button>
         <button class="btn btn--primary" id="resAgain" type="button">Repetir</button>
@@ -827,13 +817,11 @@ function stopTimer() {
   state.timer = null;
 }
 
-/* =========================
-   Practicals (tu sistema anterior)
-========================= */
+/* Practicals: render (tu sistema anterior se mantiene) */
 function renderPractical(p) {
+  const bodyEl = modalEl.querySelector("#quizBody");
   const resultsEl = modalEl.querySelector("#quizResults");
   resultsEl.style.display = "none";
-  const bodyEl = modalEl.querySelector("#quizBody");
   bodyEl.style.display = "block";
 
   modalEl.querySelector("#quizSub").textContent =
@@ -844,8 +832,8 @@ function renderPractical(p) {
   const optsEl = modalEl.querySelector("#quizOptions");
   optsEl.innerHTML = `
     <div class="practical">
-      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt || "").replaceAll("\n","<br>")}</div>
-      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n","<br>")}</div>
+      <div class="practical__prompt"><strong>Enunciado</strong><br>${escapeHtml(p.prompt || "").replaceAll("\n", "<br>")}</div>
+      <div class="practical__deliverable"><strong>Entrega</strong><br>${escapeHtml(p.deliverable || "No especificada.").replaceAll("\n", "<br>")}</div>
 
       <label class="label" style="margin-top:14px;">Tu respuesta</label>
       <textarea id="practicalAnswer" class="textarea" rows="8" placeholder="Escribe aquí tu solución..."></textarea>
@@ -859,7 +847,6 @@ function renderPractical(p) {
     </div>
   `;
 
-  // oculto navegación test
   modalEl.querySelector("#quizPrev").style.display = "none";
   modalEl.querySelector("#quizNext").style.display = "none";
   modalEl.querySelector("#quizBarFill").style.width = "0%";
@@ -869,7 +856,7 @@ function renderPractical(p) {
   optsEl.querySelector("#showSolution").onclick = () => {
     const box = optsEl.querySelector("#solutionBox");
     box.style.display = "block";
-    box.innerHTML = `<strong>Guía</strong><br>${escapeHtml(p.solution || "Sin guía todavía.").replaceAll("\n","<br>")}`;
+    box.innerHTML = `<strong>Guía</strong><br>${escapeHtml(p.solution || "Sin guía todavía.").replaceAll("\n", "<br>")}`;
 
     if (p.assets?.mermaid && window.mermaid) {
       const id = "mmd_" + Math.random().toString(16).slice(2);
@@ -879,17 +866,8 @@ function renderPractical(p) {
   };
 }
 
-function escapeHtml(s) {
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
 /* =========================
-   Parte práctica (Supabase) — reusa IDs del temario
+   Parte práctica (Supabase) · practice_questions
 ========================= */
 let practicaCache = [];
 let practicaDone = loadPracticaDone();
@@ -932,9 +910,10 @@ async function loadPractica() {
   renderPractica();
 }
 
+/* ✅ Render agrupado premium por supuesto (accordion) */
 function renderPractica() {
   const listEl = document.getElementById("temarioList");
-  const sel = document.getElementById("temarioBlock"); // filtro supuesto
+  const sel = document.getElementById("temarioBlock");
   const q = (document.getElementById("temarioSearch")?.value || "").trim().toLowerCase();
 
   const supuesto = sel?.value && sel.value !== "ALL" ? String(sel.value) : null;
@@ -960,26 +939,92 @@ function renderPractica() {
     return;
   }
 
-  listEl.innerHTML = items.map(x => {
-    const checked = practicaDone[x.id] ? "checked" : "";
-    const meta = `Supuesto ${escapeHtml(x.supuesto)} · Pregunta ${x.question_number}${x.is_reserve ? " (Reserva)" : ""}`;
-    const preview = escapeHtml((x.statement || "").slice(0, 140)) + ((x.statement || "").length > 140 ? "…" : "");
+  const groups = items.reduce((acc, it) => {
+    const key = String(it.supuesto || "—");
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(it);
+    return acc;
+  }, {});
+
+  const groupKeys = Object.keys(groups).sort((a, b) => {
+    const order = { "I": 1, "II": 2 };
+    const oa = order[a] || 99;
+    const ob = order[b] || 99;
+    if (oa !== ob) return oa - ob;
+    return a.localeCompare(b);
+  });
+
+  const ACC_KEY = "opostudy_practica_groups_open_v1";
+  let openMap = {};
+  try { openMap = JSON.parse(sessionStorage.getItem(ACC_KEY) || "{}"); } catch {}
+
+  function isOpen(key) {
+    if (q) return true;             // con búsqueda, abre todo
+    if (openMap[key] === undefined) return key === "I";
+    return !!openMap[key];
+  }
+
+  listEl.innerHTML = groupKeys.map(key => {
+    const arr = groups[key].slice().sort((a, b) => {
+      const ar = a.is_reserve ? 1 : 0;
+      const br = b.is_reserve ? 1 : 0;
+      if (ar !== br) return ar - br;
+      return Number(a.question_number) - Number(b.question_number);
+    });
+
+    const gTotal = arr.length;
+    const gDone = arr.filter(x => !!practicaDone[x.id]).length;
+    const gPct = gTotal ? Math.round((gDone / gTotal) * 100) : 0;
+
+    const opened = isOpen(key);
 
     return `
-      <div class="tema ${practicaDone[x.id] ? "is-done" : ""}" data-id="${x.id}">
-        <input class="tema__check" type="checkbox" ${checked} aria-label="Marcar completado">
-        <div>
-          <div class="tema__title">${meta}</div>
-          <div class="tema__meta">${preview}</div>
-          <div class="tema__detail"></div>
-        </div>
-        <div class="tema__actions">
-          <button class="btn btn--ghost btn--small practica__resolve" type="button">Resolver</button>
+      <div class="pq-group ${opened ? "is-open" : ""}" data-group="${escapeHtml(key)}">
+        <button class="pq-group__head" type="button">
+          <div class="pq-group__left">
+            <div class="pq-group__title">Supuesto ${escapeHtml(key)}</div>
+            <div class="pq-group__meta">${gDone}/${gTotal} completadas · ${gPct}%</div>
+          </div>
+          <div class="pq-group__chev">▾</div>
+        </button>
+
+        <div class="pq-group__body">
+          ${arr.map(x => {
+            const checked = practicaDone[x.id] ? "checked" : "";
+            const meta = `Pregunta ${x.question_number}${x.is_reserve ? " (Reserva)" : ""}`;
+            const preview = escapeHtml((x.statement || "").slice(0, 140)) + ((x.statement || "").length > 140 ? "…" : "");
+
+            return `
+              <div class="tema ${practicaDone[x.id] ? "is-done" : ""}" data-id="${x.id}">
+                <input class="tema__check" type="checkbox" ${checked} aria-label="Marcar completado">
+                <div>
+                  <div class="tema__title">Supuesto ${escapeHtml(x.supuesto)} · ${meta}</div>
+                  <div class="tema__meta">${preview}</div>
+                  <div class="tema__detail"></div>
+                </div>
+                <div class="tema__actions">
+                  <button class="btn btn--ghost btn--small practica__resolve" type="button">Resolver</button>
+                </div>
+              </div>
+            `;
+          }).join("")}
         </div>
       </div>
     `;
   }).join("");
 
+  // Accordion toggles
+  listEl.querySelectorAll(".pq-group").forEach(groupEl => {
+    const key = groupEl.dataset.group;
+    groupEl.querySelector(".pq-group__head").addEventListener("click", () => {
+      const nowOpen = !groupEl.classList.contains("is-open");
+      groupEl.classList.toggle("is-open", nowOpen);
+      openMap[key] = nowOpen;
+      sessionStorage.setItem(ACC_KEY, JSON.stringify(openMap));
+    });
+  });
+
+  // Row listeners
   listEl.querySelectorAll(".tema").forEach(row => {
     const id = row.dataset.id;
 
@@ -999,10 +1044,10 @@ function renderPractica() {
 
 function openPracticeQuestion(item) {
   const correctIndex = correctOptionToIndex(item.correct_option);
-  state.currentOfficial = null;
 
   const q = {
     kind: "practice_questions",
+
     id: item.id,
     supuesto: String(item.supuesto || ""),
     is_reserve: !!item.is_reserve,
@@ -1022,7 +1067,6 @@ function openPracticeQuestion(item) {
     difficulty: null,
   };
 
-  // Forzamos modo práctica-test con corrección inmediata
   state.examHardMode = false;
   state.mode = "practice";
   state.practiceKind = "test";
@@ -1042,7 +1086,8 @@ document.getElementById("temarioBlock")?.addEventListener("change", renderPracti
 document.getElementById("temarioSearch")?.addEventListener("input", renderPractica);
 
 /* =========================
-   Test oficial (TAI-2024) desde Supabase
+   Test oficial (official_test_questions)
+   Requiere IDs en HTML: officialTestSelect, btnOfficialPart1, btnOfficialPart2, officialTestMeta
 ========================= */
 const officialTestSelect = document.getElementById("officialTestSelect");
 const btnOfficialPart1 = document.getElementById("btnOfficialPart1");
@@ -1059,32 +1104,32 @@ function letterToIndex(letter) {
 }
 
 async function countOfficialParts(testCode) {
-  if (!officialTestMeta) return;
+  try {
+    const { count: c1, error: e1 } = await sb
+      .from("official_test_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("test_code", testCode)
+      .eq("part", 1);
 
-  const { count: c1, error: e1 } = await sb
-    .from("official_test_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("test_code", testCode)
-    .eq("part", 1);
+    const { count: c2, error: e2 } = await sb
+      .from("official_test_questions")
+      .select("*", { count: "exact", head: true })
+      .eq("test_code", testCode)
+      .eq("part", 2);
 
-  const { count: c2, error: e2 } = await sb
-    .from("official_test_questions")
-    .select("*", { count: "exact", head: true })
-    .eq("test_code", testCode)
-    .eq("part", 2);
+    if (e1 || e2) throw (e1 || e2);
 
-  if (e1 || e2) {
-    officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
-    return;
+    if (officialTestMeta) officialTestMeta.textContent =
+      `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
+  } catch (e) {
+    if (officialTestMeta) officialTestMeta.textContent = "No puedo leer el test (revisa tabla o permisos).";
   }
-
-  officialTestMeta.textContent = `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
 }
 
 async function fetchOfficialTest({ testCode, part }) {
   const { data, error } = await sb
     .from("official_test_questions")
-    .select("id,test_code,part,question_number,statement,option_a,option_b,option_c,option_d,correct_option,is_reserve")
+    .select("id,test_code,part,question_number,is_reserve,statement,option_a,option_b,option_c,option_d,correct_option")
     .eq("test_code", testCode)
     .eq("part", Number(part))
     .order("is_reserve", { ascending: true })
@@ -1106,7 +1151,7 @@ async function fetchOfficialTest({ testCode, part }) {
 
     statement: r.statement,
     options: [r.option_a, r.option_b, r.option_c, r.option_d],
-    correctIndex: letterToIndex(r.correct_option), // puede ser null
+    correctIndex: letterToIndex(r.correct_option),
     explanation: "",
     reference: "",
   }));
@@ -1122,13 +1167,11 @@ async function startOfficialPart(part) {
       return;
     }
 
-    state.currentOfficial = { testCode, part };
-
-    // modo examen: sin corrección inmediata
+    // modo examen real
     state.examHardMode = true;
     state.mode = "exam";
     state.practiceKind = "test";
-
+    // respeta el toggle
     state.questions = qs;
     state.index = 0;
     state.selected = null;
@@ -1137,7 +1180,7 @@ async function startOfficialPart(part) {
 
     openModal();
     renderQuestion();
-    startTimerIfNeeded();
+    startTimerIfNeeded(); // sin límite
   } catch (e) {
     console.error(e);
     alert("Error cargando test oficial: " + (e?.message || JSON.stringify(e)));
@@ -1148,13 +1191,14 @@ btnOfficialPart1?.addEventListener("click", () => startOfficialPart(1));
 btnOfficialPart2?.addEventListener("click", () => startOfficialPart(2));
 
 officialTestSelect?.addEventListener("change", () => {
-  countOfficialParts(officialTestSelect.value);
+  const code = officialTestSelect.value;
+  countOfficialParts(code);
 });
 
 if (officialTestSelect) countOfficialParts(officialTestSelect.value);
 
 /* =========================
-   Coach Drawer (Edge Function + fallback)
+   Coach Drawer (Edge Function offline)
 ========================= */
 const coachFab = document.getElementById("coachFab");
 const coachDrawer = document.getElementById("coachDrawer");
@@ -1170,13 +1214,11 @@ function openCoach() {
   coachDrawer.setAttribute("aria-hidden", "false");
   setTimeout(() => coachInput?.focus(), 50);
 }
-
 function closeCoach() {
   if (!coachDrawer) return;
   coachDrawer.classList.remove("is-open");
   coachDrawer.setAttribute("aria-hidden", "true");
 }
-
 coachFab?.addEventListener("click", openCoach);
 coachClose?.addEventListener("click", closeCoach);
 coachDrawer?.addEventListener("click", (e) => {
@@ -1190,61 +1232,25 @@ function coachAdd(role, text) {
   if (!coachLog) return;
   const wrap = document.createElement("div");
   wrap.className = `coach__msg ${role === "me" ? "coach__msg--me" : "coach__msg--bot"}`;
-  wrap.innerHTML = `<div class="coach__bubble">${escapeHtml(text)}</div>`;
+  wrap.innerHTML = `<div class="coach__bubble">${escapeHtml(text).replaceAll("\n", "<br>")}</div>`;
   coachLog.appendChild(wrap);
   coachLog.scrollTop = coachLog.scrollHeight;
+  return wrap;
 }
 
-// fallback local básico (por si no existe la Edge Function)
-function coachReplyLocal(input) {
-  const t = input.trim().toLowerCase();
-
-  if (!t || t === "ayuda") {
-    return "Dime qué necesitas: “fallos”, “plan”, “bloque 1/2/3/4”, “tiempo” o pregunta un concepto del temario.";
-  }
-
-  if (t.includes("fallo")) {
-    const pending = getPendingMistakesCount(null);
-    const b1 = getPendingMistakesCount(1);
-    const b2 = getPendingMistakesCount(2);
-    const b3 = getPendingMistakesCount(3);
-    const b4 = getPendingMistakesCount(4);
-    return `Tienes ${pending} fallos pendientes. B1:${b1} · B2:${b2} · B3:${b3} · B4:${b4}. Recomendación: empieza por el bloque con más fallos y haz 15 preguntas.`;
-  }
-
-  if (t.includes("plan")) {
-    const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
-    return `Plan rápido (20–30 min):
-1) 10 preguntas (bloque flojo)
-2) 5 repaso de fallos
-3) 5 preguntas mixtas.
-Tu acierto actual: ${acc}%. Objetivo hoy: +3%.`;
-  }
-
-  if (t.includes("tiempo")) {
-    return "Regla examen: 60 preguntas / 60 min ≈ 60s por pregunta. En entreno: 75–90s al principio, bajando a 60s cuando estés estable.";
-  }
-
-  const m = t.match(/bloque\s*(\d)/);
-  if (m) {
-    const b = Number(m[1]);
-    return `Enfoque Bloque ${b}: 15 preguntas + repaso de fallos del bloque. Si tu acierto cae <70%, cambia a práctica con corrección 1 sesión.`;
-  }
-
-  return "Ahora mismo no tengo el Coach avanzado conectado. Si activas la Edge Function, podré responder con temario/prácticos/test oficial. Mientras tanto: dime bloque y tema.";
-}
-
-// llamada a Edge Function (coach-chat)
-async function askCoachLLM(text) {
-  const supuestoSel = document.getElementById("temarioBlock")?.value || null;
-  const officialCode = document.getElementById("officialTestSelect")?.value || "TAI-2024";
-
-  const ctx = {
-    block: state?.block ?? null,
-    supuesto: (supuestoSel && supuestoSel !== "ALL") ? supuestoSel : null,
-    official_test_code: officialCode,
-    official_part: state.currentOfficial?.part ?? null
+function buildCoachContext() {
+  // Contexto útil para el coach offline (opcional)
+  return {
+    block: state.block ? Number(state.block) : null,
+    supuesto: document.getElementById("temarioBlock")?.value || null,
+    official_test_code: officialTestSelect?.value || "TAI-2024",
+    official_part: null
   };
+}
+
+async function askCoachEdge(text) {
+  const clientId = ensureClientId();
+  const ctx = buildCoachContext();
 
   const { data, error } = await sb.functions.invoke("coach-chat", {
     body: {
@@ -1266,19 +1272,16 @@ async function sendCoach() {
   coachAdd("me", txt);
   coachInput.value = "";
 
-  // placeholder
-  coachAdd("bot", "Pensando…");
-  const thinkingNode = coachLog?.lastElementChild;
+  const thinkingNode = coachAdd("bot", "Pensando…");
 
   try {
-    const reply = await askCoachLLM(txt);
+    const reply = await askCoachEdge(txt);
     if (thinkingNode) thinkingNode.remove();
     coachAdd("bot", reply);
   } catch (e) {
     if (thinkingNode) thinkingNode.remove();
-    const fallback = coachReplyLocal(txt);
-    coachAdd("bot", fallback);
-    console.warn("Coach Edge Function no disponible:", e?.message || e);
+    coachAdd("bot", "No puedo conectar con el Coach ahora mismo. Revisa Edge Functions → coach-chat → Logs.");
+    console.warn("Coach error:", e);
   }
 }
 
@@ -1286,11 +1289,10 @@ coachSend?.addEventListener("click", sendCoach);
 coachInput?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendCoach();
 });
-
 coachClear?.addEventListener("click", () => {
   if (!coachLog) return;
   coachLog.innerHTML = "";
-  coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o pregunta un concepto.");
+  coachAdd("bot", "Soy tu Coach TAI. Pregunta un concepto o dime: “bloque 2”, “plan”, “fallos”.");
 });
 
 /* =========================
@@ -1320,12 +1322,8 @@ initTestsUI();
 renderKpis();
 loadPractica();
 
-// mensaje inicial coach (solo UI)
-coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o pregunta un concepto.");
+// Arranque coach
+coachAdd("bot", "Soy tu Coach TAI. Pregunta un concepto o dime: “bloque 2”, “plan”, “fallos”.");
 
 // Arranque en Start
 showScreen("start");
-document.getElementById("enterAppBtn")?.addEventListener("click", () => {
-  showScreen("home");
-  setTimeout(() => openCoach(), 180);
-});
