@@ -96,7 +96,7 @@ goBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset
 // Start -> Home
 document.getElementById("enterAppBtn")?.addEventListener("click", () => {
   showScreen("home");
-  setTimeout(() => openCoach(), 180);
+ 
 });
 
 /* =========================
@@ -1327,3 +1327,4 @@ coachAdd("bot", "Soy tu Coach TAI. Pregunta un concepto o dime: “bloque 2”, 
 
 // Arranque en Start
 showScreen("start");
+
