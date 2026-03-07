@@ -1074,3 +1074,75 @@ body[data-screen="start"]::before{
 
 .btn { text-decoration: none; }
 
+/* =========================
+   START cover (portada)
+========================= */
+.start-hero{
+  min-height: calc(100vh - var(--navH));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding: 18px;
+  border-radius: var(--r);
+
+  /* ✅ pon aquí tu imagen de portada */
+  background:
+    linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.45)),
+    url("./start-cover.jpg") center/cover no-repeat;
+}
+
+body[data-screen="start"] .topbar--banner{ display:none !important; }
+body[data-screen="start"] .bottom-nav{ display:none !important; }
+body[data-screen="start"] #coachFab{ display:none !important; }
+
+.start-hero__inner{
+  text-align:center;
+  max-width: 900px;
+  width: 100%;
+  padding: 22px 18px;
+}
+
+.start-hero__title{
+  margin: 0 0 10px;
+  font-size: clamp(3rem, 7vw, 5.2rem);
+  font-weight: 950;
+  letter-spacing: .4px;
+  color: var(--neon);
+  text-shadow: 0 12px 38px rgba(0,0,0,.55), 0 0 24px rgba(255,60,90,.25);
+}
+
+.start-hero__sub{
+  margin: 0 0 22px;
+  font-size: clamp(1.05rem, 2.1vw, 1.65rem);
+  font-weight: 900;
+  color: rgba(255,255,255,.92);
+  text-shadow: 0 10px 26px rgba(0,0,0,.55);
+}
+
+.start-btn{
+  min-width: 220px;
+  padding: 14px 18px;
+  border-radius: 16px;
+  font-size: 1.05rem;
+  letter-spacing: .8px;
+  box-shadow: 0 22px 55px rgba(0,0,0,.35);
+}
+
+/* Latido “elegante” */
+.start-btn--pulse{
+  animation: btnBeat 1.25s ease-in-out infinite;
+  transform-origin: center;
+  will-change: transform;
+}
+
+@keyframes btnBeat{
+  0%,100%{ transform: scale(1); }
+  14%{ transform: scale(1.03); }
+  28%{ transform: scale(1); }
+  42%{ transform: scale(1.05); }
+  70%{ transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .start-btn--pulse{ animation:none; }
+}
