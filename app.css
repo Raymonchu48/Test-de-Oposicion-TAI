@@ -1088,7 +1088,7 @@ body[data-screen="start"]::before{
   /* ✅ pon aquí tu imagen de portada */
   background:
     linear-gradient(180deg, rgba(0,0,0,.35), rgba(0,0,0,.45)),
-    url("./start-cover.jpg") center/cover no-repeat;
+    url("./start-cover.png") center/cover no-repeat;
 }
 
 body[data-screen="start"] .topbar--banner{ display:none !important; }
@@ -1146,3 +1146,4 @@ body[data-screen="start"] #coachFab{ display:none !important; }
 @media (prefers-reduced-motion: reduce){
   .start-btn--pulse{ animation:none; }
 }
+
