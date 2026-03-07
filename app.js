@@ -1,4 +1,4 @@
-// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Test oficial + Coach Drawer + PWA install)
+// OpoStudy · app.js (SPA + Supabase + Tests + Parte práctica + Test oficial + Coach (Edge Function) + PWA)
 
 const { createClient } = window.supabase;
 
@@ -13,13 +13,32 @@ if (window.mermaid) {
 }
 
 /* =========================
+   Globals
+========================= */
+let modalEl = null;
+
+/* =========================
    Storage
 ========================= */
 const STORAGE_KEY = "opostudy_stats_v2";
 const STORAGE_MISTAKES_KEY = "opostudy_mistakes_v1";
 const STORAGE_PRACTICA_DONE = "opostudy_practica_done_v1";
-
 const MISTAKES_LOOKBACK_DAYS = 30;
+
+/* =========================
+   Client ID (sin login)
+========================= */
+const COACH_CLIENT_ID_KEY = "opostudy_client_id_v1";
+
+function getClientId() {
+  let id = localStorage.getItem(COACH_CLIENT_ID_KEY);
+  if (!id) {
+    id = (crypto?.randomUUID?.() || ("cid_" + Math.random().toString(16).slice(2)));
+    localStorage.setItem(COACH_CLIENT_ID_KEY, id);
+  }
+  return id;
+}
+const clientId = getClientId();
 
 /* =========================
    Navigation (screens)
@@ -40,7 +59,7 @@ function showScreen(name) {
   // si sales de home, cierro drawer para no “romper” móvil
   if (name !== "home") closeCoach();
 
-  // si hay modal abierto y navegas, lo cierro (evita que “se vea en todas las pantallas”)
+  // si hay modal abierto y navegas, lo cierro
   if (modalEl && modalEl.classList.contains("is-open")) closeModal();
 }
 
@@ -48,7 +67,7 @@ navBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.datase
 goBtns.forEach(btn => btn.addEventListener("click", () => showScreen(btn.dataset.go)));
 
 /* =========================
-   Stats + Mistakes
+   Stats + Mistakes (local)
 ========================= */
 function loadStats() {
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -251,6 +270,9 @@ const state = {
   timer: null,
 
   examHardMode: false,
+
+  // contexto para coach
+  currentOfficial: null,        // { testCode, part } o null
 };
 
 function initTestsUI() {
@@ -427,6 +449,8 @@ async function startPractical() {
     return;
   }
 
+  state.currentOfficial = null;
+
   openModal();
   renderPractical(data[0]);
 }
@@ -434,6 +458,7 @@ async function startPractical() {
 async function startTest() {
   try {
     state.examHardMode = false;
+    state.currentOfficial = null;
 
     if (state.mode === "practice" && state.practiceKind === "practical") {
       await startPractical();
@@ -469,6 +494,7 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
   try {
     state.examHardMode = true;
     state.mode = "exam";
+    state.currentOfficial = null;
 
     const examBlock = document.getElementById("examBlock")?.value || "";
     const blk = examBlock ? Number(examBlock) : null;
@@ -484,7 +510,7 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
 
     openModal();
     renderQuestion();
-    startTimerIfNeeded(60 * 60); // 60 min
+    startTimerIfNeeded(60 * 60);
   } catch (e) {
     console.error(e);
     alert("Error simulacro: " + (e?.message || JSON.stringify(e)));
@@ -494,8 +520,6 @@ document.getElementById("startExam")?.addEventListener("click", async () => {
 /* =========================
    Modal UI
 ========================= */
-let modalEl = null;
-
 function ensureModal() {
   if (modalEl) return modalEl;
 
@@ -553,7 +577,7 @@ function openModal() {
   ensureModal();
   modalEl.classList.add("is-open");
   document.body.classList.add("no-scroll");
-  document.body.classList.add("has-modal-open"); // oculta bottom-nav
+  document.body.classList.add("has-modal-open");
 
   // por si venimos de práctico (que los oculta)
   modalEl.querySelector("#quizPrev").style.display = "";
@@ -639,9 +663,9 @@ function selectOption(i) {
     !state.examHardMode;
 
   if (showImmediateCorrection) {
-    // Pintar correcto/incorrecto (si hay correctIndex)
     const hasCorrect = Number.isInteger(q.correctIndex) && q.correctIndex >= 0 && q.correctIndex <= 3;
 
+    // Pintar correcto/incorrecto
     if (q.kind === "practice_questions") {
       const raw = (q.correctRaw || "").toString().trim().toUpperCase();
       if (raw !== "ANULADA" && hasCorrect) {
@@ -661,7 +685,7 @@ function selectOption(i) {
       }
     }
 
-    // Texto de explicación/corrección
+    // Texto de corrección
     const ex = modalEl.querySelector("#quizExplain");
     ex.style.display = "block";
 
@@ -670,6 +694,10 @@ function selectOption(i) {
       if (raw === "ANULADA" || q.correctIndex < 0) ex.textContent = "Pregunta anulada.";
       else if (raw === "A" || raw === "B" || raw === "C" || raw === "D") ex.textContent = `Respuesta correcta: ${raw}.`;
       else ex.textContent = "Respuesta correcta no disponible.";
+    } else if (q.kind === "official_test") {
+      // Si hay plantilla, enseña; si no, indica
+      if (q.correctIndex === null || q.correctIndex === undefined) ex.textContent = "Sin plantilla de respuestas (no se puede corregir).";
+      else ex.textContent = `Respuesta correcta: ${String.fromCharCode(65 + q.correctIndex)}.`;
     } else {
       ex.textContent = q.explanation ? `Explicación: ${q.explanation}` : "Explicación no disponible.";
     }
@@ -698,7 +726,6 @@ function goNext() {
     else isCorrect = state.selected === q.correctIndex;
 
   } else if (q.kind === "official_test") {
-    // si no hay plantilla (correctIndex null), no evaluamos
     if (q.correctIndex === null || q.correctIndex === undefined) isCorrect = null;
     else isCorrect = state.selected === q.correctIndex;
 
@@ -706,7 +733,7 @@ function goNext() {
     isCorrect = state.selected === q.correctIndex;
   }
 
-  // Mistakes SOLO para tabla questions normal
+  // Mistakes SOLO para preguntas normales
   if (q.kind !== "practice_questions" && q.kind !== "official_test") {
     if (isCorrect === false) upsertMistake(q.id, q.block, q.topic);
     else if (state.mode === "mistakes" && isCorrect === true) resolveMistake(q.id);
@@ -721,7 +748,6 @@ function goNext() {
     isCorrect,
   });
 
-  // Stats: solo si evaluable
   updateStatsOnAnswer(stats, q.block, isCorrect);
 
   state.index++;
@@ -973,6 +999,7 @@ function renderPractica() {
 
 function openPracticeQuestion(item) {
   const correctIndex = correctOptionToIndex(item.correct_option);
+  state.currentOfficial = null;
 
   const q = {
     kind: "practice_questions",
@@ -1032,6 +1059,8 @@ function letterToIndex(letter) {
 }
 
 async function countOfficialParts(testCode) {
+  if (!officialTestMeta) return;
+
   const { count: c1, error: e1 } = await sb
     .from("official_test_questions")
     .select("*", { count: "exact", head: true })
@@ -1045,12 +1074,11 @@ async function countOfficialParts(testCode) {
     .eq("part", 2);
 
   if (e1 || e2) {
-    if (officialTestMeta) officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
+    officialTestMeta.textContent = "No puedo leer el test (revisa RLS o tabla).";
     return;
   }
 
-  if (officialTestMeta) officialTestMeta.textContent =
-    `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
+  officialTestMeta.textContent = `Parte 1: ${c1 ?? 0} preguntas · Parte 2: ${c2 ?? 0} preguntas`;
 }
 
 async function fetchOfficialTest({ testCode, part }) {
@@ -1094,6 +1122,8 @@ async function startOfficialPart(part) {
       return;
     }
 
+    state.currentOfficial = { testCode, part };
+
     // modo examen: sin corrección inmediata
     state.examHardMode = true;
     state.mode = "exam";
@@ -1107,7 +1137,7 @@ async function startOfficialPart(part) {
 
     openModal();
     renderQuestion();
-    startTimerIfNeeded(); // sin límite fijo
+    startTimerIfNeeded();
   } catch (e) {
     console.error(e);
     alert("Error cargando test oficial: " + (e?.message || JSON.stringify(e)));
@@ -1124,7 +1154,7 @@ officialTestSelect?.addEventListener("change", () => {
 if (officialTestSelect) countOfficialParts(officialTestSelect.value);
 
 /* =========================
-   Coach Drawer (right slide)
+   Coach Drawer (Edge Function + fallback)
 ========================= */
 const coachFab = document.getElementById("coachFab");
 const coachDrawer = document.getElementById("coachDrawer");
@@ -1140,6 +1170,7 @@ function openCoach() {
   coachDrawer.setAttribute("aria-hidden", "false");
   setTimeout(() => coachInput?.focus(), 50);
 }
+
 function closeCoach() {
   if (!coachDrawer) return;
   coachDrawer.classList.remove("is-open");
@@ -1164,12 +1195,12 @@ function coachAdd(role, text) {
   coachLog.scrollTop = coachLog.scrollHeight;
 }
 
-function coachReply(input) {
+// fallback local básico (por si no existe la Edge Function)
+function coachReplyLocal(input) {
   const t = input.trim().toLowerCase();
 
   if (!t || t === "ayuda") {
-    coachAdd("bot", "Dime qué necesitas: “fallos”, “plan”, “bloque 1/2/3/4” o “tiempo”.");
-    return;
+    return "Dime qué necesitas: “fallos”, “plan”, “bloque 1/2/3/4”, “tiempo” o pregunta un concepto del temario.";
   }
 
   if (t.includes("fallo")) {
@@ -1178,49 +1209,88 @@ function coachReply(input) {
     const b2 = getPendingMistakesCount(2);
     const b3 = getPendingMistakesCount(3);
     const b4 = getPendingMistakesCount(4);
-    coachAdd("bot", `Tienes ${pending} fallos pendientes. B1:${b1} · B2:${b2} · B3:${b3} · B4:${b4}. Recomendación: repasa primero el bloque con más fallos y haz 15 preguntas.`);
-    return;
+    return `Tienes ${pending} fallos pendientes. B1:${b1} · B2:${b2} · B3:${b3} · B4:${b4}. Recomendación: empieza por el bloque con más fallos y haz 15 preguntas.`;
   }
 
   if (t.includes("plan")) {
     const acc = stats.totalAnswered ? Math.round((stats.totalCorrect / stats.totalAnswered) * 100) : 0;
-    coachAdd("bot",
-      `Plan rápido (20–30 min):\n1) 10 preguntas (bloque flojo)\n2) 5 repaso de fallos\n3) 5 preguntas mixtas.\nTu acierto actual: ${acc}%. Objetivo hoy: +3%.`
-    );
-    return;
+    return `Plan rápido (20–30 min):
+1) 10 preguntas (bloque flojo)
+2) 5 repaso de fallos
+3) 5 preguntas mixtas.
+Tu acierto actual: ${acc}%. Objetivo hoy: +3%.`;
   }
 
   if (t.includes("tiempo")) {
-    coachAdd("bot", "Regla examen: 60 preguntas / 60 min ≈ 60s por pregunta. En entreno: 75–90s al principio, bajando a 60s cuando estés estable.");
-    return;
+    return "Regla examen: 60 preguntas / 60 min ≈ 60s por pregunta. En entreno: 75–90s al principio, bajando a 60s cuando estés estable.";
   }
 
   const m = t.match(/bloque\s*(\d)/);
   if (m) {
     const b = Number(m[1]);
-    coachAdd("bot", `Enfoque Bloque ${b}: 15 preguntas + repaso de fallos del bloque. Si tu acierto cae <70%, cambia a práctica (con corrección) 1 sesión.`);
-    return;
+    return `Enfoque Bloque ${b}: 15 preguntas + repaso de fallos del bloque. Si tu acierto cae <70%, cambia a práctica con corrección 1 sesión.`;
   }
 
-  coachAdd("bot", "No te pillo. Prueba: “fallos”, “plan”, “bloque 2”, “tiempo”.");
+  return "Ahora mismo no tengo el Coach avanzado conectado. Si activas la Edge Function, podré responder con temario/prácticos/test oficial. Mientras tanto: dime bloque y tema.";
 }
 
-function sendCoach() {
+// llamada a Edge Function (coach-chat)
+async function askCoachLLM(text) {
+  const supuestoSel = document.getElementById("temarioBlock")?.value || null;
+  const officialCode = document.getElementById("officialTestSelect")?.value || "TAI-2024";
+
+  const ctx = {
+    block: state?.block ?? null,
+    supuesto: (supuestoSel && supuestoSel !== "ALL") ? supuestoSel : null,
+    official_test_code: officialCode,
+    official_part: state.currentOfficial?.part ?? null
+  };
+
+  const { data, error } = await sb.functions.invoke("coach-chat", {
+    body: {
+      client_id: clientId,
+      message: text,
+      screen: document.body.dataset.screen,
+      context: ctx
+    }
+  });
+
+  if (error) throw error;
+  return data?.reply || "No tengo respuesta ahora mismo.";
+}
+
+async function sendCoach() {
   const txt = (coachInput?.value || "").trim();
   if (!txt) return;
+
   coachAdd("me", txt);
   coachInput.value = "";
-  coachReply(txt);
+
+  // placeholder
+  coachAdd("bot", "Pensando…");
+  const thinkingNode = coachLog?.lastElementChild;
+
+  try {
+    const reply = await askCoachLLM(txt);
+    if (thinkingNode) thinkingNode.remove();
+    coachAdd("bot", reply);
+  } catch (e) {
+    if (thinkingNode) thinkingNode.remove();
+    const fallback = coachReplyLocal(txt);
+    coachAdd("bot", fallback);
+    console.warn("Coach Edge Function no disponible:", e?.message || e);
+  }
 }
 
 coachSend?.addEventListener("click", sendCoach);
 coachInput?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") sendCoach();
 });
+
 coachClear?.addEventListener("click", () => {
   if (!coachLog) return;
   coachLog.innerHTML = "";
-  coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
+  coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o pregunta un concepto.");
 });
 
 /* =========================
@@ -1250,8 +1320,8 @@ initTestsUI();
 renderKpis();
 loadPractica();
 
-// Arranque coach mensaje
-coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o “tiempo”.");
+// mensaje inicial coach (solo UI)
+coachAdd("bot", "Soy tu Coach TAI. Escribe “fallos”, “plan”, “bloque 2” o pregunta un concepto.");
 
 // Arranque en Start
 showScreen("start");
