@@ -27,33 +27,18 @@
   <main class="app" id="app">
 
     <!-- START (splash) -->
-    <section class="screen" id="screen-start" data-screen="start">
-      <section class="card glass" style="padding:22px; min-height: 56vh; display:flex; flex-direction:column; justify-content:center;">
-        <div style="max-width:720px;">
-          <div style="font-size:3rem; font-weight:900; color: var(--neon); line-height:1; margin-bottom:10px;">OpoStudy</div>
-          <div style="font-weight:900; color:rgba(255,255,255,.92); margin-bottom:14px;">Preparación TAI · Tests inteligentes</div>
+  <section class="screen" id="screen-start" data-screen="start">
+  <div class="start-hero">
+    <div class="start-hero__inner">
+      <h1 class="start-hero__title">OpoStudy</h1>
+      <p class="start-hero__sub">Preparación TAI · Tests inteligentes</p>
 
-          <div class="hint hint--motivation" style="margin: 10px 0 18px;">
-            <img class="hint__avatar" src="./coach.png" alt="Coach" loading="lazy">
-            <div class="hint__text">
-              <strong>Entra y empieza.</strong>
-              Te abro el Coach y te recomiendo el siguiente paso.
-            </div>
-          </div>
-
-          <div class="quick">
-            <button class="btn btn--primary start-btn--pulse" id="enterAppBtn" type="button">START</button>
-            <button class="btn btn--ghost" type="button" data-go="tests">Ir a Tests</button>
-            <button class="btn btn--ghost" type="button" data-go="temario">Ir a Práctica</button>
-          </div>
-
-          <div class="hint" style="margin-top:10px;">
-            Tip: pulsa “START” para abrir el Coach.
-          </div>
-        </div>
-      </section>
-    </section>
-
+      <button class="btn btn--primary start-btn start-btn--pulse" id="enterAppBtn" type="button">
+        START
+      </button>
+    </div>
+  </div>
+</section>
     <!-- HOME -->
     <section class="screen is-active" id="screen-home" data-screen="home">
       <div class="grid">
@@ -383,3 +368,4 @@
   <script src="./app.js?v=101"></script>
 </body>
 </html>
+
