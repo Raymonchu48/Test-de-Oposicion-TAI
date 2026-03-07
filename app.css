@@ -1147,3 +1147,41 @@ body[data-screen="start"] #coachFab{ display:none !important; }
   .start-btn--pulse{ animation:none; }
 }
 
+/* ===== Parte práctica: grupos por supuesto (accordion) ===== */
+.pq-group{
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.05);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pq-group + .pq-group{ margin-top: 12px; }
+
+.pq-group__head{
+  width: 100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding: 12px 14px;
+  cursor:pointer;
+  border:0;
+  background: rgba(255,255,255,.04);
+  color: rgba(255,255,255,.92);
+}
+.pq-group__title{ font-weight: 950; color: rgba(255,255,255,.94); }
+.pq-group__meta{ font-size: .88rem; color: rgba(255,255,255,.72); margin-top:4px; }
+.pq-group__chev{
+  font-size: 1.05rem;
+  opacity: .85;
+  transform: rotate(-90deg);
+  transition: transform .16s ease;
+}
+.pq-group.is-open .pq-group__chev{ transform: rotate(0deg); }
+
+.pq-group__body{
+  display:none;
+  padding: 12px;
+}
+.pq-group.is-open .pq-group__body{ display:block; }
+.pq-group__body .tema{ margin: 10px 0 0; }
+.pq-group__body .tema:first-child{ margin-top: 0; }
