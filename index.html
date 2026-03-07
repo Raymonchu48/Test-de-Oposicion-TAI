@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./app.css?v=100" />
+  <link rel="stylesheet" href="./app.css?v=101" />
 </head>
 <body>
 
@@ -25,25 +25,35 @@
 
   <!-- App -->
   <main class="app" id="app">
-   <!-- START / SPLASH -->
-<!-- START / SPLASH (FULL) -->
-<section class="screen" id="screen-start" data-screen="start">
-  <div class="start-full">
-    <div class="start-center" role="group" aria-label="Pantalla de inicio OpoStudy">
-      <h1 class="start-title">OpoStudy</h1>
-      <p class="start-subtitle">Preparación TAI · Tests inteligentes</p>
 
-      <button class="start-btn start-btn--pulse" id="enterAppBtn" type="button">
-        <span class="start-btn__heart" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="18" height="18" focusable="false" aria-hidden="true">
-            <path d="M12 21s-7.2-4.6-9.6-8.6C.5 9.3 2.2 6 5.7 5.2c1.9-.4 3.6.4 4.8 1.8 1.2-1.4 2.9-2.2 4.8-1.8 3.5.8 5.2 4.1 3.3 7.2C19.2 16.4 12 21 12 21z"/>
-          </svg>
-        </span>
-        START
-      </button>
-    </div>
-  </div>
-</section>
+    <!-- START (splash) -->
+    <section class="screen" id="screen-start" data-screen="start">
+      <section class="card glass" style="padding:22px; min-height: 56vh; display:flex; flex-direction:column; justify-content:center;">
+        <div style="max-width:720px;">
+          <div style="font-size:3rem; font-weight:900; color: var(--neon); line-height:1; margin-bottom:10px;">OpoStudy</div>
+          <div style="font-weight:900; color:rgba(255,255,255,.92); margin-bottom:14px;">Preparación TAI · Tests inteligentes</div>
+
+          <div class="hint hint--motivation" style="margin: 10px 0 18px;">
+            <img class="hint__avatar" src="./coach.png" alt="Coach" loading="lazy">
+            <div class="hint__text">
+              <strong>Entra y empieza.</strong>
+              Te abro el Coach y te recomiendo el siguiente paso.
+            </div>
+          </div>
+
+          <div class="quick">
+            <button class="btn btn--primary start-btn--pulse" id="enterAppBtn" type="button">START</button>
+            <button class="btn btn--ghost" type="button" data-go="tests">Ir a Tests</button>
+            <button class="btn btn--ghost" type="button" data-go="temario">Ir a Práctica</button>
+          </div>
+
+          <div class="hint" style="margin-top:10px;">
+            Tip: pulsa “START” para abrir el Coach.
+          </div>
+        </div>
+      </section>
+    </section>
+
     <!-- HOME -->
     <section class="screen is-active" id="screen-home" data-screen="home">
       <div class="grid">
@@ -59,35 +69,74 @@
               </div>
             </div>
 
-            <div class="quick">
-              <button class="btn btn--primary" type="button" data-go="tests">Abrir Tests</button>
-              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Parte práctica</button>
-              <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
-              <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
+            <!-- ✅ CAMBIO: aquí antes había botones repetidos. Ahora: vídeo + enlaces -->
+            <section class="card glass" style="margin-top:14px;">
+              <h2 class="card__title">Guía rápida TAI</h2>
+
+              <div class="video-frame" style="margin-bottom:12px;">
+                <iframe
+                  src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1&playsinline=1"
+                  title="Guía rápida TAI"
+                  frameborder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowfullscreen>
+                </iframe>
+              </div>
+
+              <div class="quick">
+                <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=TAI+estrategia+examen+60+preguntas+60+minutos" target="_blank" rel="noopener">Estrategia de examen</a>
+                <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=Constituci%C3%B3n+Espa%C3%B1ola+TAI+test" target="_blank" rel="noopener">Constitución (test)</a>
+                <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=TAI+inform%C3%A1tica+bloque+4+redes+sistemas" target="_blank" rel="noopener">Bloque 4 (redes)</a>
+              </div>
+
+              <div class="hint" style="margin-top:10px;">
+                Tip: vídeo corto + 15 preguntas. Luego repasa fallos.
+              </div>
+            </section>
+          </section>
+
+          <section class="card glass">
+            <h2 class="card__title">Plan de estudio</h2>
+            <div class="plan">
+              <div class="plan__row"><span>Objetivo diario</span><strong>15 preguntas</strong></div>
+              <div class="plan__row"><span>Revisión</span><strong>Fallos últimos 7 días</strong></div>
+              <div class="plan__row"><span>Recomendación</span><strong>Examen con corrección</strong></div>
+            </div>
+          </section>
+        </div>
+
+        <aside class="col">
+          <!-- Video card (ya lo tenías) -->
+          <section class="card glass hero-card" aria-label="Video temario">
+            <div class="video-frame">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1&playsinline=1"
+                title="Desmitificando el Temario TAI"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen>
+              </iframe>
             </div>
           </section>
 
-        <section class="card glass">
-  <h2 class="card__title">Guía rápida TAI</h2>
-
-  <div class="video-frame" style="margin-bottom:12px;">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/8WuehXx_ja4?rel=0&modestbranding=1&playsinline=1"
-      title="Guía rápida TAI"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-      allowfullscreen>
-    </iframe>
-  </div>
-
-  <div class="quick">
-    <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=TAI+estrategia+examen+60+preguntas+60+minutos" target="_blank" rel="noopener">Estrategia de examen</a>
-    <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=Constituci%C3%B3n+Espa%C3%B1ola+TAI+test" target="_blank" rel="noopener">Constitución (test)</a>
-    <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=TAI+inform%C3%A1tica+bloque+4+redes+sistemas" target="_blank" rel="noopener">Bloque 4 (redes)</a>
-  </div>
-
-  <div class="hint" style="margin-top:10px;">
-    Tip: haz un vídeo corto + 15 preguntas. Luego repasa fallos.
+          <section class="card glass">
+            <h2 class="card__title">Progreso</h2>
+            <div class="kpi-grid">
+              <div class="kpi">
+                <div class="kpi__num" id="kpiAnsweredHome">0</div>
+                <div class="kpi__label">Respondidas</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiAccuracyHome">0%</div>
+                <div class="kpi__label">Acierto</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiStreakHome">0</div>
+                <div class="kpi__label">Racha</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi__num" id="kpiMistakesHome">0</div>
+                <div class="kpi__label">Fallos pendientes</div>
               </div>
             </div>
           </section>
@@ -162,37 +211,23 @@
         <aside class="col">
           <section class="card glass">
             <h2 class="card__title">Acceso rápido</h2>
-            <section class="card glass" id="officialTestCard">
-  <h2 class="card__title">Test oficial</h2>
 
-  <div class="field">
-    <label class="label">Selecciona test</label>
-    <select class="select" id="officialTestSelect">
-      <option value="TAI-2024" selected>TAI-2024</option>
-    </select>
-    <div class="hint" id="officialTestMeta">Cargando partes…</div>
-  </div>
+            <!-- ✅ CAMBIO: en vez de duplicar botones, enlaces útiles -->
+            <div class="quick" style="margin-bottom:12px;">
+              <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=como+hacer+tests+oposiciones+tecnica+descartar+respuestas" target="_blank" rel="noopener">Técnica de test</a>
+              <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=gesti%C3%B3n+del+tiempo+oposiciones+test" target="_blank" rel="noopener">Gestión del tiempo</a>
+              <a class="btn btn--ghost" href="https://www.youtube.com/results?search_query=errores+tipicos+oposiciones+test+penalizacion" target="_blank" rel="noopener">Penalización y trampas</a>
+            </div>
 
-  <div class="quick">
-    <button class="btn btn--primary" id="btnOfficialPart1" type="button">Parte 1</button>
-    <button class="btn btn--ghost" id="btnOfficialPart2" type="button">Parte 2</button>
-  </div>
-
-  <div class="hint" style="margin-top:10px;">
-    Se abrirá en modo examen (sin corrección inmediata). Resultados al final.
-  </div>
-</section>
-            <div class="quick">
-              <button class="btn btn--ghost" type="button" data-go="temario">Abrir Parte práctica</button>
-              <button class="btn btn--ghost" type="button" data-go="stats">Abrir Stats</button>
-              <button class="btn btn--ghost" type="button" data-go="exam">Simulacro</button>
+            <div class="hint">
+              Consejo: 1ª vuelta seguras, 2ª vuelta dudas, 3ª vuelta descarte.
             </div>
           </section>
         </aside>
       </div>
     </section>
 
-    <!-- PARTE PRÁCTICA (reusa screen "temario" para no romper el JS/SPA) -->
+    <!-- PARTE PRÁCTICA (antes Temario) -->
     <section class="screen" id="screen-temario" data-screen="temario">
       <section class="card glass">
         <h2 class="card__title">Parte práctica</h2>
@@ -209,14 +244,12 @@
 
           <div class="field" style="margin:0;">
             <label class="label">Buscar</label>
-            <input class="input" id="temarioSearch" placeholder="Buscar por enunciado o nº de pregunta..." autocomplete="off">
+            <input class="input" id="temarioSearch" placeholder="Buscar por enunciado o nº..." autocomplete="off">
           </div>
 
           <div class="temario-progress">
             <div class="temario-progress__pct" id="temarioPct">0% completado</div>
-            <div class="temario-progress__bar">
-              <div class="temario-progress__fill" id="temarioFill" style="width:0%"></div>
-            </div>
+            <div class="temario-progress__bar"><div class="temario-progress__fill" id="temarioFill" style="width:0%"></div></div>
           </div>
         </div>
 
@@ -293,10 +326,12 @@
         <button class="btn btn--primary" id="startExam" type="button">Iniciar simulacro</button>
       </section>
     </section>
+
   </main>
 
   <!-- Bottom nav -->
   <nav class="bottom-nav" aria-label="Navegación">
+    <button class="nav__btn" data-nav="start" type="button">Start</button>
     <button class="nav__btn is-active" data-nav="home" type="button">Inicio</button>
     <button class="nav__btn" data-nav="tests" type="button">Tests</button>
     <button class="nav__btn" data-nav="temario" type="button">Práctica</button>
@@ -345,11 +380,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
   <script src="./config.js"></script>
-  <script src="./app.js?v=100"></script>
+  <script src="./app.js?v=101"></script>
 </body>
 </html>
-
-
-
-
-
