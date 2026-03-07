@@ -1072,4 +1072,5 @@ body[data-screen="start"]::before{
   .start-btn--pulse{ animation: none; }
 }
 
+.btn { text-decoration: none; }
 
