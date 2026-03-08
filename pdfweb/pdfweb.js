@@ -1,4 +1,5 @@
-/* PDF Web · data + render + modal */
+/* PDF Web · data + render + modal (rutas correctas para /pdfweb -> /pdf) */
+
 const LIB = {
   modules: [
     {
@@ -79,7 +80,7 @@ const LIB = {
     { id: "C01", name: "Casos · 01", tags: "casos 01 supuestos ejercicios", pdf: "../pdf/casos_01.pdf" },
     { id: "C02", name: "Casos · 02", tags: "casos 02 supuestos ejercicios", pdf: "../pdf/casos_02.pdf" },
     { id: "C04", name: "Casos · 04", tags: "casos 04 supuestos ejercicios", pdf: "../pdf/casos_04.pdf" },
-    { id: "C05", name: "Casos · 05", tags: "casos 05 supuestos ejercicios", pdf: "../pdf/casos_05.pdf" }
+    { id: "C05", name: "Casos · 05", tags: "casos 05 supuestos ejercicios", pdf: "../pdf/casos_05.pdf" },
   ]
 };
 
@@ -104,6 +105,7 @@ function esc(s){
 }
 
 function openPdf(url, title){
+  if (!pdfModal || !pdfFrame || !pdfTitle) return;
   pdfTitle.textContent = title || "Documento";
   pdfFrame.src = url;
   pdfModal.classList.add("is-open");
@@ -112,6 +114,7 @@ function openPdf(url, title){
 }
 
 function closePdf(){
+  if (!pdfModal || !pdfFrame) return;
   pdfModal.classList.remove("is-open");
   pdfModal.setAttribute("aria-hidden", "true");
   pdfFrame.src = "";
@@ -215,8 +218,8 @@ function render(query=""){
 
   const total = LIB.modules.length + LIB.cases.length;
   const shown = mods.length + cases.length;
-  elCount.textContent = String(total);
-  elShown.textContent = String(shown);
+  if (elCount) elCount.textContent = String(total);
+  if (elShown) elShown.textContent = String(shown);
 }
 
 elQ?.addEventListener("input", (e)=> render(e.target.value));
