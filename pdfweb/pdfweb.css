@@ -519,3 +519,62 @@ body{
 .modal__frame{
   background: rgba(255,255,255,.35);
 }
+
+/* =========================
+   PDF Web (papel) · Fix contraste + turquesa OpoStudy
+   Pegar al final de pdfweb.css
+========================= */
+
+:root{
+  --opostudy-teal: #0497a7;
+  --opostudy-teal2:#057f8c;
+  --ink-strong: rgba(18, 16, 12, .92);
+  --ink-soft: rgba(18, 16, 12, .72);
+}
+
+/* Header */
+.brand__title{
+  color: var(--opostudy-teal) !important;
+  text-shadow: 0 0 14px rgba(4,151,167,.18);
+}
+.brand__sub{
+  color: var(--ink-soft) !important;
+}
+
+/* Hero */
+.hero__h{
+  color: var(--opostudy-teal) !important;
+  text-shadow: 0 0 14px rgba(4,151,167,.16);
+}
+.hero__p{
+  color: var(--ink-soft) !important;
+}
+
+/* Títulos de cards */
+.card__title{
+  color: var(--opostudy-teal) !important;
+  text-shadow: 0 0 12px rgba(4,151,167,.14);
+}
+
+/* Texto general dentro de cards/items */
+.item__name{
+  color: var(--ink-strong) !important;
+}
+.item__meta,
+.hint,
+.kpi__l{
+  color: var(--ink-soft) !important;
+}
+
+/* Botones ghost en “papel”: que se lean */
+.btn--ghost,
+.badge{
+  color: var(--ink-strong) !important;
+  border-color: rgba(4,151,167,.25) !important;
+}
+
+/* KPI número: turquesa (en vez de rojo) para coherencia */
+.kpi__n{
+  color: var(--opostudy-teal) !important;
+  text-shadow: 0 0 12px rgba(4,151,167,.14);
+}
