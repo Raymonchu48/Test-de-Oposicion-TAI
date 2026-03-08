@@ -578,3 +578,34 @@ body{
   color: var(--opostudy-teal) !important;
   text-shadow: 0 0 12px rgba(4,151,167,.14);
 }
+
+/* =========================
+   PDF Web · Body desplegable en gris oscuro (legible)
+========================= */
+
+/* Fondo oscuro SOLO cuando el item está abierto */
+.item.is-open .item__body{
+  background: rgba(12, 20, 28, .78);
+  border-top: 1px solid rgba(255,255,255,.10);
+  color: rgba(255,255,255,.92);
+}
+
+/* Bullets dentro del desplegable */
+.item.is-open .bullets{
+  color: rgba(255,255,255,.88);
+}
+.item.is-open .bullets li{
+  color: rgba(255,255,255,.88);
+}
+
+/* Botones dentro del desplegable: que se lean bien */
+.item.is-open .btn--ghost{
+  background: rgba(255,255,255,.10);
+  border-color: rgba(255,255,255,.18);
+  color: rgba(255,255,255,.92);
+}
+
+/* Mantener el primary turquesa perfecto */
+.item.is-open .btn--primary{
+  color:#fff;
+}
