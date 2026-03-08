@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>OpoStudy · PDF Web</title>
+
+  <link rel="stylesheet" href="./pdfweb.css" />
+</head>
+
+<body>
+  <header class="top">
+    <div class="top__inner">
+      <div class="brand">
+        <div class="brand__title">OpoStudy</div>
+        <div class="brand__sub">PDF Web · Módulos + Resúmenes + Casos</div>
+      </div>
+
+      <div class="top__actions">
+        <a class="btn btn--ghost" href="../index.html">Volver a OpoStudy</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <h1 class="hero__h">Biblioteca PDF</h1>
+      <p class="hero__p">Módulos (MF01–MF05) con resumen + PDF completo y casos para práctica.</p>
+
+      <div class="toolbar">
+        <div class="field">
+          <label class="label">Buscar</label>
+          <input id="q" class="input" placeholder="Buscar (ej. malware, hardware, privacidad, inventario)..." autocomplete="off">
+        </div>
+
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi__n" id="kCount">0</div>
+            <div class="kpi__l">Elementos</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__n" id="kShown">0</div>
+            <div class="kpi__l">Visibles</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <section class="card">
+        <h2 class="card__title">Módulos</h2>
+        <div id="modules" class="acc"></div>
+      </section>
+
+      <aside class="card">
+        <h2 class="card__title">Casos</h2>
+        <div id="cases" class="acc"></div>
+
+        <div class="hint">
+          Flujo recomendado: resumen → PDF completo → casos.
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <!-- Modal visor PDF -->
+  <div class="modal" id="pdfModal" aria-hidden="true">
+    <div class="modal__bg" data-close="1"></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-label="Visor PDF">
+      <div class="modal__top">
+        <div class="modal__title" id="pdfTitle">Documento</div>
+        <button class="btn btn--ghost btn--small" id="pdfClose" type="button">Cerrar</button>
+      </div>
+      <iframe class="modal__frame" id="pdfFrame" src="" title="PDF"></iframe>
+    </div>
+  </div>
+
+  <script src="./pdfweb.js"></script>
+</body>
+</html>
