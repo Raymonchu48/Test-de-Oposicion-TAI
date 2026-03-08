@@ -1239,3 +1239,18 @@ body[data-screen="start"] #coachFab{ display:none !important; }
   pointer-events:none;
   background: linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,60,90,.08));
 }
+/* Igualar altura de columnas en la pantalla Tests */
+#screen-tests .grid{
+  align-items: stretch; /* antes: start */
+}
+
+/* La card de la derecha ocupa toda la altura y empuja el mini-hero hacia abajo */
+#screen-tests aside.col > .card{
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#screen-tests .pdfweb-hero{
+  margin-top: auto;     /* empuja el hero al fondo */
+}
