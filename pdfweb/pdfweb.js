@@ -15,7 +15,7 @@ const LIB = {
         "Normativa: propiedad intelectual y protección de datos."
       ],
       summaryPdf: "../pdf/Resumen_modulo_1.pdf",
-      fullPdf: "../pdf/MF01.pdf"
+      fullPdf: "pdfweb/pdf/MF01.pdf"
     },
     {
       id: "MF02",
@@ -224,3 +224,4 @@ function render(query=""){
 
 elQ?.addEventListener("input", (e)=> render(e.target.value));
 render("");
+
