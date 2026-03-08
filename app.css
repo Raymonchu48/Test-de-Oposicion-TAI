@@ -1185,3 +1185,26 @@ body[data-screen="start"] #coachFab{ display:none !important; }
 .pq-group.is-open .pq-group__body{ display:block; }
 .pq-group__body .tema{ margin: 10px 0 0; }
 .pq-group__body .tema:first-child{ margin-top: 0; }
+.pdfweb-hero{
+  margin-top: 12px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.14);
+  background: rgba(0,0,0,.18);
+  box-shadow: 0 18px 50px rgba(0,0,0,.22);
+  aspect-ratio: 16 / 9;
+  position: relative;
+}
+.pdfweb-hero__media{
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+.pdfweb-hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background: linear-gradient(135deg, rgba(4,151,167,.10), rgba(255,60,90,.08));
+}
