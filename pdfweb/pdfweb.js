@@ -14,7 +14,7 @@ const LIB = {
         "Gestión de datos: almacenamiento, copias, cifrado, sistemas de archivos.",
         "Normativa: propiedad intelectual y protección de datos."
       ],
-      summaryPdf: "../pdf/Resumen_modulo_1.pdf",
+      summaryPdf: "pdfweb/pdf/Resumen_modulo_1.pdf",
       fullPdf: "pdfweb/pdf/MF01.pdf"
     },
     {
@@ -224,4 +224,5 @@ function render(query=""){
 
 elQ?.addEventListener("input", (e)=> render(e.target.value));
 render("");
+
 
