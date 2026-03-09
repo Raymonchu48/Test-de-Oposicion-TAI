@@ -7,13 +7,10 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, ".", "");
 
   return {
-    // GitHub Pages: repo + carpeta con espacios (URL encoded)
-    base: "/Test-de-Oposicion-TAI/Mapa%20Mental%20TAI/",
+    // GitHub Pages: repo + carpeta real
+    base: "/Test-de-Oposicion-TAI/Mapa_Mental_TAI/",
 
-    plugins: [
-      react(),
-      tailwindcss(),
-    ],
+    plugins: [react(), tailwindcss()],
 
     define: {
       "process.env.GEMINI_API_KEY": JSON.stringify(env.GEMINI_API_KEY || "demo"),
